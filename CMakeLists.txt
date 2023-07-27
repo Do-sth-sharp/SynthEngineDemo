@@ -20,6 +20,7 @@ set (JucePlugin_Build_VST OFF)
 set (JucePlugin_Build_VST3 ON)
 set (JucePlugin_Build_AU OFF)
 set (JucePlugin_Build_AUv3 OFF)
+set (JucePlugin_Build_LV2 OFF)
 set (JucePlugin_Build_RTAS OFF)
 set (JucePlugin_Build_AAX OFF)
 set (JucePlugin_Build_Standalone OFF)
@@ -32,17 +33,13 @@ set (JUCE_BELA OFF)
 set (JUCE_USE_ANDROID_OPENSLES OFF)
 set (JUCE_ASIO_DEBUGGING OFF)
 set (JUCE_WINRT_MIDI_LOGGING OFF)
-set (JUCE_PLUGINHOST_VST OFF)
-set (JUCE_PLUGINHOST_VST3 OFF)
-set (JUCE_PLUGINHOST_AU OFF)
-set (JUCE_PLUGINHOST_LADSPA OFF)
-set (JUCE_PLUGINHOST_LV2 OFF)
-set (JUCE_PLUGINHOST_ARA OFF)
 set (JUCE_CUSTOM_VST3_SDK ON)
+set (JUCE_VST3_CAN_REPLACE_VST2 ON)
 set (JUCE_USE_MP3AUDIOFORMAT OFF)
 set (JUCE_USE_LAME_AUDIO_FORMAT OFF)
 
 set (VST3_SRC_PATH "${CMAKE_CURRENT_SOURCE_DIR}/vst3sdk")
+set (VST_SRC_PATH "${CMAKE_CURRENT_SOURCE_DIR}/vst2-sdk-for-vst3sdk")
 
 set (JUCE_DEBUG_DEF "DEBUG=1" "_DEBUG=1")
 set (JUCE_NDEBUG_DEF "NDEBUG=1")
@@ -57,6 +54,7 @@ set (JUCE_MODULE_DEF
     "JUCE_MODULE_AVAILABLE_juce_audio_basics=1"
     "JUCE_MODULE_AVAILABLE_juce_audio_devices=1"
     "JUCE_MODULE_AVAILABLE_juce_audio_formats=1"
+    "JUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1"
     "JUCE_MODULE_AVAILABLE_juce_audio_processors=1"
     "JUCE_MODULE_AVAILABLE_juce_audio_utils=1"
     "JUCE_MODULE_AVAILABLE_juce_box2d=1"
@@ -79,6 +77,7 @@ set (JUCE_MODULE_DEF
     "JucePlugin_Build_VST3=$<IF:$<BOOL:${JucePlugin_Build_VST3}>,1,0>"
     "JucePlugin_Build_AU=$<IF:$<BOOL:${JucePlugin_Build_AU}>,1,0>"
     "JucePlugin_Build_AUv3=$<IF:$<BOOL:${JucePlugin_Build_AUv3}>,1,0>"
+    "JucePlugin_Build_LV2=$<IF:$<BOOL:${JucePlugin_Build_LV2}>,1,0>"
     "JucePlugin_Build_RTAS=$<IF:$<BOOL:${JucePlugin_Build_RTAS}>,1,0>"
     "JucePlugin_Build_AAX=$<IF:$<BOOL:${JucePlugin_Build_AAX}>,1,0>"
     "JucePlugin_Build_Standalone=$<IF:$<BOOL:${JucePlugin_Build_Standalone}>,1,0>"
@@ -90,13 +89,8 @@ set (JUCE_MODULE_DEF
     "JUCE_USE_ANDROID_OPENSLES=$<IF:$<BOOL:${JUCE_USE_ANDROID_OPENSLES}>,1,0>"
     "JUCE_ASIO_DEBUGGING=$<IF:$<BOOL:${JUCE_ASIO_DEBUGGING}>,1,0>"
     "JUCE_WINRT_MIDI_LOGGING=$<IF:$<BOOL:${JUCE_WINRT_MIDI_LOGGING}>,1,0>"
-    "JUCE_PLUGINHOST_VST=$<IF:$<BOOL:${JUCE_PLUGINHOST_VST}>,1,0>"
-    "JUCE_PLUGINHOST_VST3=$<IF:$<BOOL:${JUCE_PLUGINHOST_VST3}>,1,0>"
-    "JUCE_PLUGINHOST_AU=$<IF:$<BOOL:${JUCE_PLUGINHOST_AU}>,1,0>"
-    "JUCE_PLUGINHOST_LADSPA=$<IF:$<BOOL:${JUCE_PLUGINHOST_LADSPA}>,1,0>"
-    "JUCE_PLUGINHOST_LV2=$<IF:$<BOOL:${JUCE_PLUGINHOST_LV2}>,1,0>"
-    "JUCE_PLUGINHOST_ARA=$<IF:$<BOOL:${JUCE_PLUGINHOST_ARA}>,1,0>"
     "JUCE_CUSTOM_VST3_SDK=$<IF:$<BOOL:${JUCE_CUSTOM_VST3_SDK}>,1,0>"
+    "JUCE_VST3_CAN_REPLACE_VST2=$<IF:$<BOOL:${JUCE_VST3_CAN_REPLACE_VST2}>,1,0>"
     "JUCE_USE_MP3AUDIOFORMAT=$<IF:$<BOOL:${JUCE_USE_MP3AUDIOFORMAT}>,1,0>"
     "JUCE_USE_LAME_AUDIO_FORMAT=$<IF:$<BOOL:${JUCE_USE_LAME_AUDIO_FORMAT}>,1,0>"
     "JucePlugin_Enable_ARA=$<IF:$<BOOL:${JucePlugin_Enable_ARA}>,1,0>"
@@ -135,21 +129,21 @@ if (JUCE_ASIO)
         message (SEND_ERROR "ASIO SDK notfound!")
     endif (DEFINED ASIO_SRC_PATH)
 endif (JUCE_ASIO)
-if (JUCE_PLUGINHOST_VST OR JucePlugin_Build_VST)
+if (JucePlugin_Build_VST OR ((JUCE_PLUGINHOST_VST3 OR JucePlugin_Build_VST3) AND JUCE_VST3_CAN_REPLACE_VST2))
     if (DEFINED VST_SRC_PATH)
         set (JUCE_VST_INC_PATH ${VST_SRC_PATH})
     else (DEFINED VST_SRC_PATH)
         message (SEND_ERROR "VST SDK notfound!")
     endif (DEFINED VST_SRC_PATH)
-endif (JUCE_PLUGINHOST_VST OR JucePlugin_Build_VST)
-if ((JUCE_PLUGINHOST_VST3 OR JucePlugin_Build_VST3) AND JUCE_CUSTOM_VST3_SDK)
+endif (JucePlugin_Build_VST OR ((JUCE_PLUGINHOST_VST3 OR JucePlugin_Build_VST3) AND JUCE_VST3_CAN_REPLACE_VST2))
+if (JucePlugin_Build_VST3 AND JUCE_CUSTOM_VST3_SDK)
     if (DEFINED VST3_SRC_PATH)
         set (JUCE_VST3_INC_PATH ${VST3_SRC_PATH})
     else (DEFINED VST3_SRC_PATH)
         message (SEND_ERROR "VST3 SDK notfound!")
     endif (DEFINED VST3_SRC_PATH)
-endif ((JUCE_PLUGINHOST_VST3 OR JucePlugin_Build_VST3) AND JUCE_CUSTOM_VST3_SDK)
-if (JUCE_PLUGINHOST_LV2)
+endif (JucePlugin_Build_VST3 AND JUCE_CUSTOM_VST3_SDK)
+if (JucePlugin_Build_LV2)
     if (DEFINED LV2_SRC_PATH)
         set (JUCE_LV2_INC_PATH ${LV2_SRC_PATH})
     else (DEFINED LV2_SRC_PATH)
@@ -169,8 +163,8 @@ if (JUCE_PLUGINHOST_LV2)
     set (JUCE_LV2_SRC_FIX
         "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_processors/juce_audio_processors_lv2_libs.cpp"
     )
-endif (JUCE_PLUGINHOST_LV2)
-if (JUCE_PLUGINHOST_ARA OR JucePlugin_Enable_ARA)
+endif (JucePlugin_Build_LV2)
+if (JucePlugin_Enable_ARA)
     if (DEFINED ARA_SRC_PATH)
         set (JUCE_ARA_INC_PATH ${ARA_SRC_PATH})
     else (DEFINED ARA_SRC_PATH)
@@ -178,19 +172,15 @@ if (JUCE_PLUGINHOST_ARA OR JucePlugin_Enable_ARA)
     endif (DEFINED ARA_SRC_PATH)
 
     #ARA SDK Src
-    if (JUCE_PLUGINHOST_ARA)
-    set (JUCE_ARA_SRC_FIX
-        "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_processors/juce_audio_processors_ara.cpp"
-    )
-    elseif (JucePlugin_Enable_ARA)
+    if (JucePlugin_Enable_ARA)
     set (JUCE_ARA_SRC_FIX
         "${ARA_SRC_PATH}/ARA_Library/PlugIn/ARAPlug.cpp"
         "${ARA_SRC_PATH}/ARA_Library/Debug/ARADebug.c"
         "${ARA_SRC_PATH}/ARA_Library/Dispatch/ARAPlugInDispatch.cpp"
         "${ARA_SRC_PATH}/ARA_Library/Utilities/ARAChannelFormat.cpp"
     )
-    endif (JUCE_PLUGINHOST_ARA)
-endif (JUCE_PLUGINHOST_ARA OR JucePlugin_Enable_ARA)
+    endif (JucePlugin_Enable_ARA)
+endif (JucePlugin_Enable_ARA)
 
 #=============================================================================================================================
 # Target
