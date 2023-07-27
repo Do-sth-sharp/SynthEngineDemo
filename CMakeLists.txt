@@ -24,7 +24,7 @@ set (JucePlugin_Build_RTAS OFF)
 set (JucePlugin_Build_AAX OFF)
 set (JucePlugin_Build_Standalone OFF)
 set (JucePlugin_Build_Unity OFF)
-set (JucePlugin_Enable_ARA ON)
+set (JucePlugin_Enable_ARA OFF)
 set (JUCE_USE_WINRT_MIDI OFF)
 set (JUCE_ASIO OFF)
 set (JUCE_JACK OFF)
@@ -43,7 +43,6 @@ set (JUCE_USE_MP3AUDIOFORMAT OFF)
 set (JUCE_USE_LAME_AUDIO_FORMAT OFF)
 
 set (VST3_SRC_PATH "${CMAKE_CURRENT_SOURCE_DIR}/vst3sdk")
-set (ARA_SRC_PATH "${CMAKE_CURRENT_SOURCE_DIR}/ARA_SDK")
 
 set (JUCE_DEBUG_DEF "DEBUG=1" "_DEBUG=1")
 set (JUCE_NDEBUG_DEF "NDEBUG=1")
@@ -213,11 +212,6 @@ target_include_directories (SynthEngineDemo PUBLIC
 )
 
 target_compile_definitions (SynthEngineDemo PRIVATE
-"JucePlugin_ARACompatibleArchiveIDs=\"\""
-"JucePlugin_ARAContentTypes=ARA::kARAContentTypeNotes|ARA::kARAContentTypeTempoEntries|ARA::kARAContentTypeBarSignatures"
-"JucePlugin_ARATransformationFlags=ARA::kARAPlaybackTransformationTimestretch"
-"JucePlugin_ARAFactoryID=\"org.VocalSharp.VocalShaper.SynthEngineDemo.factory\""
-"JucePlugin_ARADocumentArchiveID=\"org.VocalSharp.VocalShaper.SynthEngineDemo.aradocumentarchive.1.0.0\""
 "JucePlugin_Name=\"SynthEngineDemo\""
 "JucePlugin_Desc=\"VocalShaper Synth Engine Demo\""
 "JucePlugin_Manufacturer=\"VocalSharp Org.\""
