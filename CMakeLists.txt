@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.15)
-project (SynthEngineDemo VERSION 1.0.0 LANGUAGES CXX)
+project (SynthEngineDemo VERSION 1.0.0 LANGUAGES CXX C)
 
 if (NOT DEFINED CMAKE_BUILD_TYPE)
     set (CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
@@ -24,7 +24,7 @@ set (JucePlugin_Build_RTAS OFF)
 set (JucePlugin_Build_AAX OFF)
 set (JucePlugin_Build_Standalone OFF)
 set (JucePlugin_Build_Unity OFF)
-set (JucePlugin_Enable_ARA OFF)
+set (JucePlugin_Enable_ARA ON)
 set (JUCE_USE_WINRT_MIDI OFF)
 set (JUCE_ASIO OFF)
 set (JUCE_JACK OFF)
@@ -42,8 +42,8 @@ set (JUCE_CUSTOM_VST3_SDK ON)
 set (JUCE_USE_MP3AUDIOFORMAT OFF)
 set (JUCE_USE_LAME_AUDIO_FORMAT OFF)
 
-set (VST3_SRC_PATH "vst3sdk")
-set (ARA_SRC_PATH "ARA_SDK")
+set (VST3_SRC_PATH "${CMAKE_CURRENT_SOURCE_DIR}/vst3sdk")
+set (ARA_SRC_PATH "${CMAKE_CURRENT_SOURCE_DIR}/ARA_SDK")
 
 set (JUCE_DEBUG_DEF "DEBUG=1" "_DEBUG=1")
 set (JUCE_NDEBUG_DEF "NDEBUG=1")
@@ -182,6 +182,13 @@ if (JUCE_PLUGINHOST_ARA OR JucePlugin_Enable_ARA)
     if (JUCE_PLUGINHOST_ARA)
     set (JUCE_ARA_SRC_FIX
         "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_processors/juce_audio_processors_ara.cpp"
+    )
+    elseif (JucePlugin_Enable_ARA)
+    set (JUCE_ARA_SRC_FIX
+        "${ARA_SRC_PATH}/ARA_Library/PlugIn/ARAPlug.cpp"
+        "${ARA_SRC_PATH}/ARA_Library/Debug/ARADebug.c"
+        "${ARA_SRC_PATH}/ARA_Library/Dispatch/ARAPlugInDispatch.cpp"
+        "${ARA_SRC_PATH}/ARA_Library/Utilities/ARAChannelFormat.cpp"
     )
     endif (JUCE_PLUGINHOST_ARA)
 endif (JUCE_PLUGINHOST_ARA OR JucePlugin_Enable_ARA)
