@@ -40,6 +40,7 @@ set (JUCE_USE_LAME_AUDIO_FORMAT OFF)
 
 set (VST3_SRC_PATH "${CMAKE_CURRENT_SOURCE_DIR}/vst3sdk")
 set (VST_SRC_PATH "${CMAKE_CURRENT_SOURCE_DIR}/vst2-sdk-for-vst3sdk")
+set (DMDA_SRC_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libDMDA")
 
 set (JUCE_DEBUG_DEF "DEBUG=1" "_DEBUG=1")
 set (JUCE_NDEBUG_DEF "NDEBUG=1")
@@ -182,13 +183,17 @@ if (JucePlugin_Enable_ARA)
     endif (JucePlugin_Enable_ARA)
 endif (JucePlugin_Enable_ARA)
 
+set (DMDA_INC "${DMDA_SRC_PATH}")
+set (DMDA_SRC "${DMDA_SRC_PATH}/DMDA.cpp")
+set (DMDA_DEF "DMDA_PLUGIN=1")
+
 #=============================================================================================================================
 # Target
 #=============================================================================================================================
 
 file (GLOB_RECURSE JUCE_SRC "JuceLibraryCode/*.cpp" "JuceLibraryCode/*.h")
 file (GLOB_RECURSE TARGET_SRC "src/*.cpp" "src/*.h")
-add_library (SynthEngineDemo SHARED ${JUCE_SRC} ${TARGET_SRC} ${JUCE_LV2_SRC_FIX} ${JUCE_ARA_SRC_FIX})
+add_library (SynthEngineDemo SHARED ${JUCE_SRC} ${TARGET_SRC} ${DMDA_SRC} ${JUCE_LV2_SRC_FIX} ${JUCE_ARA_SRC_FIX})
 set_target_properties (SynthEngineDemo PROPERTIES
   PREFIX "" OUTPUT_NAME "SynthEngineDemo" SUFFIX ".vst3")
 set_source_files_properties ("JuceLibraryCode/JuceHeader.h" PROPERTIES HEADER_FILE_ONLY TRUE)
@@ -199,6 +204,7 @@ target_include_directories (SynthEngineDemo PUBLIC
     ${JUCE_VST3_INC_PATH}
     ${JUCE_LV2_INC_PATH}
     ${JUCE_ARA_INC_PATH}
+    ${DMDA_INC}
 )
 
 target_compile_definitions (SynthEngineDemo PRIVATE
@@ -246,6 +252,7 @@ elseif (APPLE)
 endif ()
 
 target_compile_definitions (SynthEngineDemo PUBLIC ${JUCE_MODULE_DEF})
+target_compile_definitions (SynthEngineDemo PUBLIC ${DMDA_DEF})
 
 target_compile_definitions (SynthEngineDemo PUBLIC "JUCE_MODAL_LOOPS_PERMITTED=1" "JUCE_CATCH_UNHANDLED_EXCEPTIONS=1")
 

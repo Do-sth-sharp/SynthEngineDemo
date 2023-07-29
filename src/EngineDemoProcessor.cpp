@@ -2,7 +2,7 @@
 #include "EngineDemoEditor.h"
 
 EngineDemoProcessor::EngineDemoProcessor()
-	: AudioProcessor(BusesProperties()
+	: PluginProcessor(BusesProperties()
 #if ! JucePlugin_IsMidiEffect
 #if ! JucePlugin_IsSynth
 		.withInput("Input", juce::AudioChannelSet::stereo(), true)

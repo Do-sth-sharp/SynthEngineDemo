@@ -1,8 +1,9 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <DMDA.h>
 
-class EngineDemoProcessor final : public juce::AudioProcessor {
+class EngineDemoProcessor final : public DMDA::PluginProcessor {
 public:
 	EngineDemoProcessor();
 	~EngineDemoProcessor();
