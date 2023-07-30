@@ -156,6 +156,10 @@ void EngineDemoProcessor::setStateInformation(const void* data, int sizeInBytes)
 	juce::ignoreUnused(data, sizeInBytes);
 }
 
+DMDA::Context* EngineDemoProcessor::createContext() const {
+	return new DMDA::MidiFileContext;
+}
+
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
 	return new EngineDemoProcessor();
 }
