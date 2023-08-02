@@ -372,3 +372,191 @@ else (NOT MSVC)
         )
     endif (CMAKE_BUILD_TYPE STREQUAL Debug)
 endif (NOT MSVC)
+
+#=============================================================================================================================
+#Test
+#=============================================================================================================================
+set (KarPlusStrong_SRC 
+    "src/KarPlusStrong.cpp"
+    "src/KarPlusStrong.h"
+)
+file (GLOB_RECURSE TEST_SRC "src/test/*.cpp" "src/test/*.h")
+
+add_executable (TestKarPlusStrong ${JUCE_SRC} ${TEST_SRC} ${KarPlusStrong_SRC})
+set_source_files_properties ("JuceLibraryCode/JuceHeader.h" PROPERTIES HEADER_FILE_ONLY TRUE)
+target_include_directories (TestKarPlusStrong PUBLIC ${JUCE_INC})
+set_target_properties (TestKarPlusStrong PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/test")
+
+if (CMAKE_BUILD_TYPE STREQUAL Debug)
+    target_compile_definitions (TestKarPlusStrong PUBLIC ${JUCE_DEBUG_DEF})
+else (CMAKE_BUILD_TYPE STREQUAL Debug)
+    target_compile_definitions (TestKarPlusStrong PUBLIC ${JUCE_NDEBUG_DEF})
+endif (CMAKE_BUILD_TYPE STREQUAL Debug)
+
+if (WIN32)
+    target_compile_definitions (TestKarPlusStrong PUBLIC ${JUCE_WIN_DEF})
+elseif (UNIX AND NOT APPLE)
+    target_compile_definitions (TestKarPlusStrong PUBLIC ${JUCE_LINUX_DEF})
+elseif (APPLE)
+    target_compile_definitions (TestKarPlusStrong PUBLIC ${JUCE_OSX_DEF})
+endif ()
+
+set (JUCE_TEST_INFO_DEF
+    "JucePlugin_Name=\"KarPlusStrongTest\""
+    "JucePlugin_Manufacturer=\"VocalSharp Org.\""
+    "JucePlugin_VersionCode=0x10000"
+    "JucePlugin_VersionString=\"1.0.0\""
+)
+set (JUCE_TEST_MODULE_DEF 
+    "JUCE_DISPLAY_SPLASH_SCREEN=0"
+    "JUCE_USE_DARK_SPLASH_SCREEN=0"
+    "JUCE_MODULE_AVAILABLE_juce_analytics=1"
+    "JUCE_MODULE_AVAILABLE_juce_audio_basics=1"
+    "JUCE_MODULE_AVAILABLE_juce_audio_devices=1"
+    "JUCE_MODULE_AVAILABLE_juce_audio_formats=1"
+    "JUCE_MODULE_AVAILABLE_juce_audio_plugin_client=0"
+    "JUCE_MODULE_AVAILABLE_juce_audio_processors=1"
+    "JUCE_MODULE_AVAILABLE_juce_audio_utils=1"
+    "JUCE_MODULE_AVAILABLE_juce_box2d=0"
+    "JUCE_MODULE_AVAILABLE_juce_core=1"
+    "JUCE_MODULE_AVAILABLE_juce_cryptography=0"
+    "JUCE_MODULE_AVAILABLE_juce_data_structures=1"
+    "JUCE_MODULE_AVAILABLE_juce_dsp=1"
+    "JUCE_MODULE_AVAILABLE_juce_events=1"
+    "JUCE_MODULE_AVAILABLE_juce_graphics=0"
+    "JUCE_MODULE_AVAILABLE_juce_gui_basics=0"
+    "JUCE_MODULE_AVAILABLE_juce_gui_extra=0"
+    "JUCE_MODULE_AVAILABLE_juce_opengl=0"
+    "JUCE_MODULE_AVAILABLE_juce_osc=0"
+    "JUCE_MODULE_AVAILABLE_juce_product_unlocking=0"
+    "JUCE_MODULE_AVAILABLE_juce_video=0"
+    "JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1"
+    "JUCE_STRICT_REFCOUNTEDPOINTER=1"
+    "JUCE_STANDALONE_APPLICATION=0"
+    "JUCE_USE_WINRT_MIDI=0"
+    "JUCE_ASIO=0"
+    "JUCE_JACK=0"
+    "JUCE_BELA=0"
+    "JUCE_USE_ANDROID_OPENSLES=0"
+    "JUCE_ASIO_DEBUGGING=0"
+    "JUCE_WINRT_MIDI_LOGGING=0"
+    "JUCE_USE_MP3AUDIOFORMAT=0"
+    "JUCE_USE_LAME_AUDIO_FORMAT=0"
+)
+target_compile_definitions (TestKarPlusStrong PUBLIC ${JUCE_TEST_MODULE_DEF} ${JUCE_TEST_INFO_DEF})
+
+target_compile_definitions (TestKarPlusStrong PUBLIC "JUCE_MODAL_LOOPS_PERMITTED=1" "JUCE_CATCH_UNHANDLED_EXCEPTIONS=1")
+
+if (NOT MSVC)
+    target_compile_options (TestKarPlusStrong PRIVATE
+    -fPIC
+    -fvisibility=default
+    )
+
+    if (WIN32)
+        target_link_libraries (TestKarPlusStrong PRIVATE
+            -m64
+            -s
+            -lgdi32
+            -luser32
+            -lkernel32
+            -lcomctl32
+            -lwinmm
+            -luuid
+            -lwsock32
+            -lwininet
+            -lversion
+            -lole32
+            -lws2_32
+            -loleaut32
+            -limm32
+            -lcomdlg32
+            -lshlwapi
+            -lrpcrt4
+            -lopengl32
+        )
+    elseif (UNIX AND NOT APPLE)
+        target_link_libraries (TestKarPlusStrong PRIVATE
+            -shared
+            -fvisibility=default
+            ${RT}
+            ${DL}
+            ${PTHREAD}
+            ${GL}
+            ${ALSA_LIBRARIES}
+            ${FREETYPE2_LIBRARIES}
+            ${LIBCURL_LIBRARIES}
+        )
+    elseif (APPLE)
+        target_link_libraries (TestKarPlusStrong PRIVATE
+            "-framework Accelerate"
+            "-framework AudioToolbox"
+            "-framework AVFoundation"
+            "-framework AVKit"
+            "-framework Carbon"
+            "-framework Cocoa"
+            "-framework CoreAudio"
+            "-framework CoreAudioKit"
+            "-framework CoreMedia"
+            "-framework CoreMIDI"
+            "-framework DiscRecording"
+            "-framework Foundation"
+            "-framework IOKit"
+            "-framework OpenGL"
+            "-framework QuartzCore"
+            "-framework WebKit"
+        )
+    endif ()
+else (NOT MSVC)
+    if (CMAKE_BUILD_TYPE STREQUAL Debug)
+        target_compile_options (TestKarPlusStrong PUBLIC
+            /permissive-#符合模式:是
+	        /GS#安全检查:启用安全检查
+	        /Zc:wchar_t#将WChar_t视为内置类型:是
+	        /Gm-#启用最小重新生成:否
+	        /sdl#SDL检查:是
+	        /fp:precise#浮点模型:精度
+	        /Zc:forScope#强制For循环范围中的合规性:是
+	        /Gd#调用约定:__cdecl
+	        /nologo#取消显示启动版权标志:是
+	        /bigobj#较大生成对象:是
+        )
+        target_link_options (TestKarPlusStrong PUBLIC
+	        /MANIFEST#生成清单:是
+	        /NXCOMPAT#数据执行保护(DEP):是
+	        /DYNAMICBASE#随机基址:是
+	        /LARGEADDRESSAWARE#启用大地址:是
+	        /SUBSYSTEM:CONSOLE#子系统:窗口
+	        /MANIFESTUAC:NO#启用用户账户控制:否
+	        /NOLOGO#取消显示启动版权标志:是
+        )
+    else (CMAKE_BUILD_TYPE STREQUAL Debug)
+        target_compile_options (TestKarPlusStrong PUBLIC
+            /permissive-#符合模式:是
+	        /GS#安全检查:启用安全检查
+	        /GL#全程序优化:是
+	        /Gy#启用函数级链接:是
+	        /Zc:wchar_t#将WChar_t视为内置类型:是
+	        /Gm-#启用最小重新生成:否
+	        /sdl#SDL检查:是
+	        /fp:precise#浮点模型:精度
+	        /Zc:forScope#强制For循环范围中的合规性:是
+	        /Gd#调用约定:__cdecl
+	        /Oi#启用内部函数:是
+	        /nologo#取消显示启动版权标志:是
+	        /bigobj#较大生成对象:是
+        )
+        target_link_options (TestKarPlusStrong PUBLIC
+	        /MANIFEST#生成清单:是
+	        /LTCG:incremental#链接时间代码生成:使用快速链接时间代码生成
+	        /NXCOMPAT#数据执行保护(DEP):是
+	        /DYNAMICBASE#随机基址:是
+	        /LARGEADDRESSAWARE#启用大地址:是
+	        /OPT:REF#引用:是
+	        /SUBSYSTEM:CONSOLE#子系统:窗口
+	        /MANIFESTUAC:NO#启用用户账户控制:否
+	        /OPT:ICF#启用COMDAT折叠:是
+	        /NOLOGO#取消显示启动版权标志:是
+        )
+    endif (CMAKE_BUILD_TYPE STREQUAL Debug)
+endif (NOT MSVC)
