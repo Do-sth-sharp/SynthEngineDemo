@@ -9,7 +9,7 @@
 
 KarPlusStrong::KarPlusStrong(int seed) {
 	/** Init Random Engine */
-	std::default_random_engine randomEngine(seed);
+	std::mt19937 randomEngine(seed);
 	std::uniform_real_distribution<float> randomDistribution(-1, 1);
 
 	/** Create Noise Array */
@@ -38,7 +38,7 @@ bool KarPlusStrong::synth(juce::AudioBuffer<float>& buffer, double sampleRate,
 	/** Synth */
 	double currentFreq = 440;
 	bool tempReverseFlag = false;
-	for (int start = 0, clipLength = 0; start < length; start += clipLength) {
+	for (int start = 0, clipLength = 0; start < length - 1; start += clipLength) {
 		/** Get Clip Length */
 		int frameNum = (start + frameDeviation) / frameLength;
 		if (frameNum < freq.size()) {
@@ -48,12 +48,16 @@ bool KarPlusStrong::synth(juce::AudioBuffer<float>& buffer, double sampleRate,
 			}
 		}
 		clipLength = (1 / currentFreq) * sampleRate;
+		if (start + clipLength >= length) {
+			clipLength = length - 1 - start;
+		}
 
 		/** Select Buffer */
 		const float* ptr0 = (start == 0)
 			? this->noiseSource.data()
 			: (tempReverseFlag ? temp1.data() : temp0.data());
 		float* ptr1 = tempReverseFlag ? temp0.data() : temp1.data();
+		tempReverseFlag = !tempReverseFlag;
 
 		/** Prepare Clip */
 		KarPlusStrong::prepareNextClip(ptr0, ptr1, this->noiseSource.size());
@@ -88,6 +92,6 @@ void KarPlusStrong::copyClip(
 
 	for (int i = 0; i < size; i++) {
 		float decay = startDecay + static_cast<float>(i) / (size - 1) * (endDecay - startDecay);
-		dst[i] += (src[i] * decay);
+		dst[i] = dst[i] + (src[i] * decay);
 	}
 }
