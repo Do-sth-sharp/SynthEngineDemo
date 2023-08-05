@@ -7,7 +7,7 @@
 #define KPS_FREQ_MAX 12543.9
 #define KPS_AVERAGE_R 0.5
 
-KarPlusStrong::KarPlusStrong(int seed) {
+KarPlusStrong::KarPlusStrong(int seed, KarPlusStrong::Device device) {
 	/** Init Random Engine */
 	std::mt19937 randomEngine(seed);
 	std::uniform_real_distribution<float> randomDistribution(-1, 1);
@@ -18,6 +18,18 @@ KarPlusStrong::KarPlusStrong(int seed) {
 	this->noiseSource.resize(KPSNoiseLength);
 	for (int i = 0; i < this->noiseSource.size(); i++) {
 		this->noiseSource.getReference(i) = randomDistribution(randomEngine);
+	}
+
+	/** Set Device */
+	switch (device) {
+	case KarPlusStrong::Device::SSE:
+		this->prepareNextClipFunc = KarPlusStrong::prepareNextClipSSE;
+		this->copyClipFunc = KarPlusStrong::copyClipSSE;
+		break;
+	case KarPlusStrong::Device::AVX:
+		this->prepareNextClipFunc = KarPlusStrong::prepareNextClipAVX;
+		this->copyClipFunc = KarPlusStrong::copyClipAVX;
+		break;
 	}
 }
 
@@ -60,14 +72,14 @@ bool KarPlusStrong::synth(juce::AudioBuffer<float>& buffer, double sampleRate,
 		tempReverseFlag = !tempReverseFlag;
 
 		/** Prepare Clip */
-		KarPlusStrong::prepareNextClip(ptr0, ptr1, this->noiseSource.size());
+		this->prepareNextClipFunc(ptr0, ptr1, this->noiseSource.size());
 
 		/** Get Decay */
 		float startDecay = 1 - static_cast<float>(start) / length;
 		float endDecay = 1 - static_cast<float>(start + clipLength - 1) / length;
 
 		/** Copy Data */
-		KarPlusStrong::copyClip(ptr1,
+		this->copyClipFunc(ptr1,
 			&(buffer.getWritePointer(0))[startSample + start],
 			startDecay, endDecay, clipLength);
 	}
@@ -94,4 +106,28 @@ void KarPlusStrong::copyClip(
 		float decay = startDecay + static_cast<float>(i) / (size - 1) * (endDecay - startDecay);
 		dst[i] = dst[i] + (src[i] * decay);
 	}
+}
+
+void KarPlusStrong::prepareNextClipSSE(
+	const float* source0, float* source1, int size) {
+	/** TODO */
+}
+
+void KarPlusStrong::copyClipSSE(
+	const float* src, float* dst,
+	float startDecay, float endDecay,
+	int size) {
+	/** TODO */
+}
+
+void KarPlusStrong::prepareNextClipAVX(
+	const float* source0, float* source1, int size) {
+	/** TODO */
+}
+
+void KarPlusStrong::copyClipAVX(
+	const float* src, float* dst,
+	float startDecay, float endDecay,
+	int size) {
+	/** TODO */
 }
