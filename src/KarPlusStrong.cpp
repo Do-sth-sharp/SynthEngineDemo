@@ -23,12 +23,16 @@ KarPlusStrong::KarPlusStrong(int seed, KarPlusStrong::Device device) {
 	/** Set Device */
 	switch (device) {
 	case KarPlusStrong::Device::SSE3:
-		this->prepareNextClipFunc = KarPlusStrong::prepareNextClipSSE;
-		this->copyClipFunc = KarPlusStrong::copyClipSSE;
+		this->prepareNextClipFunc = KarPlusStrong::prepareNextClipSSE3;
+		this->copyClipFunc = KarPlusStrong::copyClipSSE3;
 		break;
 	case KarPlusStrong::Device::AVX2:
-		this->prepareNextClipFunc = KarPlusStrong::prepareNextClipAVX;
-		this->copyClipFunc = KarPlusStrong::copyClipAVX;
+		this->prepareNextClipFunc = KarPlusStrong::prepareNextClipAVX2;
+		this->copyClipFunc = KarPlusStrong::copyClipAVX2;
+		break;
+	case KarPlusStrong::Device::AVX512:
+		this->prepareNextClipFunc = KarPlusStrong::prepareNextClipAVX512;
+		this->copyClipFunc = KarPlusStrong::copyClipAVX512;
 		break;
 	}
 }
@@ -108,7 +112,7 @@ void KarPlusStrong::copyClip(
 	}
 }
 
-void KarPlusStrong::prepareNextClipSSE(
+void KarPlusStrong::prepareNextClipSSE3(
 	const float* source0, float* source1, int size) {
 	jassert(source0 && source1);
 
@@ -141,7 +145,7 @@ void KarPlusStrong::prepareNextClipSSE(
 	}
 }
 
-void KarPlusStrong::copyClipSSE(
+void KarPlusStrong::copyClipSSE3(
 	const float* src, float* dst,
 	float startDecay, float endDecay,
 	int size) {
@@ -182,7 +186,7 @@ void KarPlusStrong::copyClipSSE(
 	}
 }
 
-void KarPlusStrong::prepareNextClipAVX(
+void KarPlusStrong::prepareNextClipAVX2(
 	const float* source0, float* source1, int size) {
 	jassert(source0 && source1);
 
@@ -215,7 +219,7 @@ void KarPlusStrong::prepareNextClipAVX(
 	}
 }
 
-void KarPlusStrong::copyClipAVX(
+void KarPlusStrong::copyClipAVX2(
 	const float* src, float* dst,
 	float startDecay, float endDecay,
 	int size) {
@@ -248,6 +252,81 @@ void KarPlusStrong::copyClipAVX(
 
 	/** Caculate End */
 	if (int remainder = (size % 8)) {
+		for (int i = size - remainder; i < size; i++) {
+			float decay =
+				startDecay + static_cast<float>(i) / (size - 1) * decayDiffer;
+			dst[i] = dst[i] + (src[i] * decay);
+		}
+	}
+}
+
+void KarPlusStrong::prepareNextClipAVX512(
+	const float* source0, float* source1, int size) {
+	jassert(source0 && source1);
+
+	/** Average Coef */
+	__m512 src0Coef = _mm512_set1_ps(KPS_AVERAGE_R);
+	__m512 src1Coef = _mm512_set1_ps(1 - KPS_AVERAGE_R);
+
+	/** Caculate Start Point */
+	source1[0] = source0[0] * KPS_AVERAGE_R
+		+ source0[size - 1] * (1 - KPS_AVERAGE_R);
+
+	/** Caculate Loop */
+	for (int i = 1; (i + 16) <= size; i += 16) {
+		__m512 src0Data = _mm512_loadu_ps(&source0[i]);
+		__m512 src0Res = _mm512_mul_ps(src0Data, src0Coef);
+
+		__m512 src1Data = _mm512_loadu_ps(&source0[i - 1]);
+		__m512 src1Res = _mm512_mul_ps(src1Data, src1Coef);
+
+		__m512 dstData = _mm512_add_ps(src0Res, src1Res);
+		_mm512_storeu_ps(&source1[i], dstData);
+	}
+
+	/** Caculate End */
+	if (int remainder = ((size - 1) % 16)) {
+		for (int i = size - remainder; i < size; i++) {
+			source1[i] = source0[i] * KPS_AVERAGE_R
+				+ source0[i - 1] * (1 - KPS_AVERAGE_R);
+		}
+	}
+}
+
+void KarPlusStrong::copyClipAVX512(
+	const float* src, float* dst,
+	float startDecay, float endDecay,
+	int size) {
+	jassert(src && dst);
+
+	/** Decay Memory */
+	const float decayDiffer = endDecay - startDecay;
+	__m512 decayDifferData = _mm512_set1_ps(decayDiffer);
+	__m512 sizeM1Data = _mm512_set1_ps(size - 1);
+	__m512 startDecayData = _mm512_set1_ps(startDecay);
+	float incrementalCore[16] =
+	{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+	__m512 incrementalCoreData = _mm512_loadu_ps(incrementalCore);
+
+	/** Caculate Loop */
+	for (int i = 0; i + 16 <= size; i += 16) {
+		/** Get Decay */
+		__m512 decayBase = _mm512_set1_ps(i);
+		__m512 decayArg = _mm512_add_ps(decayBase, incrementalCoreData);
+		__m512 decayProportion = _mm512_div_ps(decayArg, sizeM1Data);
+		__m512 decaySize = _mm512_mul_ps(decayProportion, decayDifferData);
+		__m512 decayRes = _mm512_add_ps(startDecayData, decaySize);
+
+		/** Add Data To Dst */
+		__m512 srcData = _mm512_loadu_ps(&src[i]);
+		__m512 srcRes = _mm512_mul_ps(srcData, decayRes);
+		__m512 dstData = _mm512_loadu_ps(&dst[i]);
+		__m512 dstRes = _mm512_add_ps(dstData, srcRes);
+		_mm512_storeu_ps(&dst[i], dstRes);
+	}
+
+	/** Caculate End */
+	if (int remainder = (size % 16)) {
 		for (int i = size - remainder; i < size; i++) {
 			float decay =
 				startDecay + static_cast<float>(i) / (size - 1) * decayDiffer;

@@ -54,7 +54,11 @@ void synthTrack(const juce::MidiMessageSequence* track,
 
 	/** KPS Renderer */
 	auto KPSDevice = KarPlusStrong::Device::Normal;
-	if (juce::SystemStats::hasAVX2()) {
+	if (juce::SystemStats::hasAVX512F()) {
+		KPSDevice = KarPlusStrong::Device::AVX512;
+		printf("    Synth Device: AVX512\n");
+	}
+	else if (juce::SystemStats::hasAVX2()) {
 		KPSDevice = KarPlusStrong::Device::AVX2;
 		printf("    Synth Device: AVX2\n");
 	}

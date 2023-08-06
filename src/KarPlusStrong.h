@@ -7,7 +7,8 @@ public:
 	enum class Device {
 		Normal,
 		SSE3,
-		AVX2
+		AVX2,
+		AVX512
 	};
 
 	KarPlusStrong() = delete;
@@ -27,16 +28,23 @@ private:
 		float startDecay, float endDecay,
 		int size);
 
-	static void prepareNextClipSSE(
+	static void prepareNextClipSSE3(
 		const float* source0, float* source1, int size);
-	static void copyClipSSE(
+	static void copyClipSSE3(
 		const float* src, float* dst,
 		float startDecay, float endDecay,
 		int size);
 
-	static void prepareNextClipAVX(
+	static void prepareNextClipAVX2(
 		const float* source0, float* source1, int size);
-	static void copyClipAVX(
+	static void copyClipAVX2(
+		const float* src, float* dst,
+		float startDecay, float endDecay,
+		int size);
+
+	static void prepareNextClipAVX512(
+		const float* source0, float* source1, int size);
+	static void copyClipAVX512(
 		const float* src, float* dst,
 		float startDecay, float endDecay,
 		int size);
