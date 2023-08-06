@@ -148,7 +148,7 @@ void KarPlusStrong::copyClipSSE(
 	jassert(src && dst);
 
 	/** Decay Memory */
-	const int decayDiffer = endDecay - startDecay;
+	const float decayDiffer = endDecay - startDecay;
 	__m128 decayDifferData = _mm_set1_ps(decayDiffer);
 	__m128 sizeM1Data = _mm_set1_ps(size - 1);
 	__m128 startDecayData = _mm_set1_ps(startDecay);
