@@ -184,12 +184,74 @@ void KarPlusStrong::copyClipSSE(
 
 void KarPlusStrong::prepareNextClipAVX(
 	const float* source0, float* source1, int size) {
-	/** TODO */
+	jassert(source0 && source1);
+
+	/** Average Coef */
+	__m256 src0Coef = _mm256_set1_ps(KPS_AVERAGE_R);
+	__m256 src1Coef = _mm256_set1_ps(1 - KPS_AVERAGE_R);
+
+	/** Caculate Start Point */
+	source1[0] = source0[0] * KPS_AVERAGE_R
+		+ source0[size - 1] * (1 - KPS_AVERAGE_R);
+
+	/** Caculate Loop */
+	for (int i = 1; (i + 8) <= size; i += 8) {
+		__m256 src0Data = _mm256_loadu_ps(&source0[i]);
+		__m256 src0Res = _mm256_mul_ps(src0Data, src0Coef);
+
+		__m256 src1Data = _mm256_loadu_ps(&source0[i - 1]);
+		__m256 src1Res = _mm256_mul_ps(src1Data, src1Coef);
+
+		__m256 dstData = _mm256_add_ps(src0Res, src1Res);
+		_mm256_storeu_ps(&source1[i], dstData);
+	}
+
+	/** Caculate End */
+	if (int remainder = ((size - 1) % 8)) {
+		for (int i = size - remainder; i < size; i++) {
+			source1[i] = source0[i] * KPS_AVERAGE_R
+				+ source0[i - 1] * (1 - KPS_AVERAGE_R);
+		}
+	}
 }
 
 void KarPlusStrong::copyClipAVX(
 	const float* src, float* dst,
 	float startDecay, float endDecay,
 	int size) {
-	/** TODO */
+	jassert(src && dst);
+
+	/** Decay Memory */
+	const float decayDiffer = endDecay - startDecay;
+	__m256 decayDifferData = _mm256_set1_ps(decayDiffer);
+	__m256 sizeM1Data = _mm256_set1_ps(size - 1);
+	__m256 startDecayData = _mm256_set1_ps(startDecay);
+	float incrementalCore[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+	__m256 incrementalCoreData = _mm256_loadu_ps(incrementalCore);
+
+	/** Caculate Loop */
+	for (int i = 0; i + 8 <= size; i += 8) {
+		/** Get Decay */
+		__m256 decayBase = _mm256_set1_ps(i);
+		__m256 decayArg = _mm256_add_ps(decayBase, incrementalCoreData);
+		__m256 decayProportion = _mm256_div_ps(decayArg, sizeM1Data);
+		__m256 decaySize = _mm256_mul_ps(decayProportion, decayDifferData);
+		__m256 decayRes = _mm256_add_ps(startDecayData, decaySize);
+
+		/** Add Data To Dst */
+		__m256 srcData = _mm256_loadu_ps(&src[i]);
+		__m256 srcRes = _mm256_mul_ps(srcData, decayRes);
+		__m256 dstData = _mm256_loadu_ps(&dst[i]);
+		__m256 dstRes = _mm256_add_ps(dstData, srcRes);
+		_mm256_storeu_ps(&dst[i], dstRes);
+	}
+
+	/** Caculate End */
+	if (int remainder = (size % 8)) {
+		for (int i = size - remainder; i < size; i++) {
+			float decay =
+				startDecay + static_cast<float>(i) / (size - 1) * decayDiffer;
+			dst[i] = dst[i] + (src[i] * decay);
+		}
+	}
 }
