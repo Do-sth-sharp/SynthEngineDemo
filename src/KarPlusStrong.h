@@ -6,8 +6,8 @@ class KarPlusStrong {
 public:
 	enum class Device {
 		Normal,
-		SSE,
-		AVX
+		SSE3,
+		AVX2
 	};
 
 	KarPlusStrong() = delete;

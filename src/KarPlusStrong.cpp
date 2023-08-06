@@ -22,11 +22,11 @@ KarPlusStrong::KarPlusStrong(int seed, KarPlusStrong::Device device) {
 
 	/** Set Device */
 	switch (device) {
-	case KarPlusStrong::Device::SSE:
+	case KarPlusStrong::Device::SSE3:
 		this->prepareNextClipFunc = KarPlusStrong::prepareNextClipSSE;
 		this->copyClipFunc = KarPlusStrong::copyClipSSE;
 		break;
-	case KarPlusStrong::Device::AVX:
+	case KarPlusStrong::Device::AVX2:
 		this->prepareNextClipFunc = KarPlusStrong::prepareNextClipAVX;
 		this->copyClipFunc = KarPlusStrong::copyClipAVX;
 		break;
@@ -110,14 +110,76 @@ void KarPlusStrong::copyClip(
 
 void KarPlusStrong::prepareNextClipSSE(
 	const float* source0, float* source1, int size) {
-	/** TODO */
+	jassert(source0 && source1);
+
+	/** Average Coef */
+	__m128 src0Coef = _mm_set1_ps(KPS_AVERAGE_R);
+	__m128 src1Coef = _mm_set1_ps(1 - KPS_AVERAGE_R);
+
+	/** Caculate Start Point */
+	source1[0] = source0[0] * KPS_AVERAGE_R
+		+ source0[size - 1] * (1 - KPS_AVERAGE_R);
+
+	/** Caculate Loop */
+	for (int i = 1; (i + 4) <= size; i += 4) {
+		__m128 src0Data = _mm_loadu_ps(&source0[i]);
+		__m128 src0Res = _mm_mul_ps(src0Data, src0Coef);
+
+		__m128 src1Data = _mm_loadu_ps(&source0[i - 1]);
+		__m128 src1Res = _mm_mul_ps(src1Data, src1Coef);
+
+		__m128 dstData = _mm_add_ps(src0Res, src1Res);
+		_mm_storeu_ps(&source1[i], dstData);
+	}
+
+	/** Caculate End */
+	if (int remainder = ((size - 1) % 4)) {
+		for (int i = size - remainder; i < size; i++) {
+			source1[i] = source0[i] * KPS_AVERAGE_R
+				+ source0[i - 1] * (1 - KPS_AVERAGE_R);
+		}
+	}
 }
 
 void KarPlusStrong::copyClipSSE(
 	const float* src, float* dst,
 	float startDecay, float endDecay,
 	int size) {
-	/** TODO */
+	jassert(src && dst);
+
+	/** Decay Memory */
+	const int decayDiffer = endDecay - startDecay;
+	__m128 decayDifferData = _mm_set1_ps(decayDiffer);
+	__m128 sizeM1Data = _mm_set1_ps(size - 1);
+	__m128 startDecayData = _mm_set1_ps(startDecay);
+	_MM_ALIGN16 float incrementalCore[4] = { 0, 1, 2, 3 };
+	__m128 incrementalCoreData = _mm_load_ps(incrementalCore);
+
+	/** Caculate Loop */
+	for (int i = 0; i + 4 <= size; i += 4) {
+		/** Get Decay */
+		__m128 decayBase = _mm_set1_ps(i);
+		__m128 decayArg = _mm_add_ps(decayBase, incrementalCoreData);
+		__m128 decayProportion = _mm_div_ps(decayArg, sizeM1Data);
+		__m128 decaySize = _mm_mul_ps(decayProportion, decayDifferData);
+		__m128 decayRes = _mm_add_ps(startDecayData, decaySize);
+		
+		/** Add Data To Dst */
+		__m128 srcData = _mm_loadu_ps(&src[i]);
+		__m128 srcRes = _mm_mul_ps(srcData, decayRes);
+		__m128 dstData = _mm_loadu_ps(&dst[i]);
+		__m128 dstRes = _mm_add_ps(dstData, srcRes);
+		_mm_storeu_ps(&dst[i], dstRes);
+	}
+
+	/** Caculate End */
+	if (int remainder = (size % 4)) {
+		for (int i = size - remainder; i < size; i++) {
+			float decay =
+				startDecay + static_cast<float>(i) / (size - 1) * decayDiffer;
+			dst[i] = dst[i] + (src[i] * decay);
+		}
+	}
 }
 
 void KarPlusStrong::prepareNextClipAVX(

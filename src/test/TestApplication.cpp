@@ -53,7 +53,19 @@ void synthTrack(const juce::MidiMessageSequence* track,
 	int totalEvents = track->getNumEvents();
 
 	/** KPS Renderer */
-	KarPlusStrong kps(KPS_SEED);
+	auto KPSDevice = KarPlusStrong::Device::Normal;
+	/*if (juce::SystemStats::hasAVX2()) {
+		KPSDevice = KarPlusStrong::Device::AVX2;
+		printf("    Synth Device: AVX2\n");
+	}
+	else */if (juce::SystemStats::hasSSE3()) {
+		KPSDevice = KarPlusStrong::Device::SSE3;
+		printf("    Synth Device: SSE3\n");
+	}
+	else {
+		printf("    Synth Device: Normal\n");
+	}
+	KarPlusStrong kps(KPS_SEED, KPSDevice);
 
 	/** Time Count */
 	clock_t start = clock();
