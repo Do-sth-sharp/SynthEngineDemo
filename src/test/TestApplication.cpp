@@ -45,7 +45,7 @@ inline void writeProgressBar(
 }
 
 void synthTrack(const juce::MidiMessageSequence* track,
-	juce::AudioSampleBuffer& buffer, int sampleRate) {
+	juce::AudioSampleBuffer& buffer, int sampleRate, KarPlusStrong::Device device) {
 	/** Check Args */
 	if (!track) { return; }
 
@@ -53,23 +53,7 @@ void synthTrack(const juce::MidiMessageSequence* track,
 	int totalEvents = track->getNumEvents();
 
 	/** KPS Renderer */
-	auto KPSDevice = KarPlusStrong::Device::Normal;
-	if (juce::SystemStats::hasAVX512F()) {
-		KPSDevice = KarPlusStrong::Device::AVX512;
-		printf("    Synth Device: AVX512\n");
-	}
-	else if (juce::SystemStats::hasAVX2()) {
-		KPSDevice = KarPlusStrong::Device::AVX2;
-		printf("    Synth Device: AVX2\n");
-	}
-	else if (juce::SystemStats::hasSSE3()) {
-		KPSDevice = KarPlusStrong::Device::SSE3;
-		printf("    Synth Device: SSE3\n");
-	}
-	else {
-		printf("    Synth Device: Normal\n");
-	}
-	KarPlusStrong kps(KPS_SEED, KPSDevice);
+	KarPlusStrong kps(KPS_SEED, device);
 
 	/** Time Count */
 	clock_t start = clock();
@@ -108,7 +92,7 @@ void synthTrack(const juce::MidiMessageSequence* track,
 }
 
 bool synth(const juce::File& input, const juce::File& output,
-	int sampleRate, int bitDepth) {
+	int sampleRate, int bitDepth, KarPlusStrong::Device device) {
 	/** Read Midi */
 	juce::MidiFile midi;
 	{
@@ -148,7 +132,7 @@ bool synth(const juce::File& input, const juce::File& output,
 			track->getNumEvents(), track->getStartTime(), track->getEndTime());
 
 		/** Synth Track */
-		synthTrack(track, buffer, sampleRate);
+		synthTrack(track, buffer, sampleRate, device);
 	}
 
 	/** Save Wave File */
@@ -209,6 +193,44 @@ void parseCommand(const juce::ArgumentList& args) {
 		bitDepth = bitDepthValue;
 	}
 
+	/** Default Synth Device */
+	auto device = KarPlusStrong::Device::Normal;
+	if (juce::SystemStats::hasSSE3()) {
+		device = KarPlusStrong::Device::SSE3;
+	}
+	if (juce::SystemStats::hasAVX2()) {
+		device = KarPlusStrong::Device::AVX2;
+	}
+	if (juce::SystemStats::hasAVX512F()) {
+		device = KarPlusStrong::Device::AVX512;
+	}
+	/** Arg Synth Device */
+	if (args.containsOption("--sisd")) {
+		device = KarPlusStrong::Device::Normal;
+	}
+	if (args.containsOption("--sse3")) {
+		device = KarPlusStrong::Device::SSE3;
+	}
+	if (args.containsOption("--avx2")) {
+		device = KarPlusStrong::Device::AVX2;
+	}
+	if (args.containsOption("--avx512")) {
+		device = KarPlusStrong::Device::AVX512;
+	}
+	/** Support Synth Device */
+	if (device == KarPlusStrong::Device::AVX512 &&
+		!juce::SystemStats::hasAVX512F()) {
+		device = KarPlusStrong::Device::AVX2;
+	}
+	if (device == KarPlusStrong::Device::AVX2 &&
+		!juce::SystemStats::hasAVX2()) {
+		device = KarPlusStrong::Device::SSE3;
+	}
+	if (device == KarPlusStrong::Device::SSE3 &&
+		!juce::SystemStats::hasSSE3()) {
+		device = KarPlusStrong::Device::Normal;
+	}
+
 	/** Check File Name */
 	if (!inputFile.existsAsFile()) {
 		juce::ConsoleApplication::fail(
@@ -228,10 +250,24 @@ void parseCommand(const juce::ArgumentList& args) {
 	printf("Output File: %s\n", outputFile.getFullPathName().toStdString().c_str());
 	printf("Sample Rate: %d\n", sampleRate);
 	printf("Bit Depth: %d\n", bitDepth);
+	switch (device) {
+	case KarPlusStrong::Device::SSE3:
+		printf("Synth Device: SSE3\n");
+		break;
+	case KarPlusStrong::Device::AVX2:
+		printf("Synth Device: AVX2\n");
+		break;
+	case KarPlusStrong::Device::AVX512:
+		printf("Synth Device: AVX512\n");
+		break;
+	default:
+		printf("Synth Device: Normal\n");
+		break;
+	}
 
 	/** Read MIDI, synth and save wave */
 	printf("=====Synth=====\n");
-	if (!synth(inputFile, outputFile, sampleRate, bitDepth)) {
+	if (!synth(inputFile, outputFile, sampleRate, bitDepth, device)) {
 		printf("=====Synth=====\n");
 		juce::ConsoleApplication::fail("Synth Error!");
 	}
@@ -270,6 +306,33 @@ int main(int argc, char* argv[]) {
 		"Set audio bit depth.",
 		"Set audio bit depth. Default is 24(bit).\n"
 		"Available bit depths: 8, 16, 24, 32",
+		::parseCommand
+		});
+	app.addCommand({ "--sisd",
+		"--sisd",
+		"Force to use SISD instruction set to accelerate synthesis.",
+		"Force to use SISD instruction set to accelerate synthesis.",
+		::parseCommand
+		});
+	app.addCommand({ "--sse3",
+		"--sse3",
+		"Try to use SSE3 instruction set to accelerate synthesis.",
+		"Try to use SSE3 instruction set to accelerate synthesis.\n"
+		"If don't has SSE3, this will try to use SISD instruction set",
+		::parseCommand
+		});
+	app.addCommand({ "--avx2",
+		"--avx2",
+		"Try to use AVX2 instruction set to accelerate synthesis.",
+		"Try to use AVX2 instruction set to accelerate synthesis.\n"
+		"If don't has AVX2, this will try to use SSE3 instruction set",
+		::parseCommand
+		});
+	app.addCommand({ "--avx512",
+		"--avx512",
+		"Try to use AVX512 instruction set to accelerate synthesis.",
+		"Try to use AVX512 instruction set to accelerate synthesis.\n"
+		"If don't has AVX512, this will try to use AVX2 instruction set",
 		::parseCommand
 		});
 

@@ -22,18 +22,24 @@ KarPlusStrong::KarPlusStrong(int seed, KarPlusStrong::Device device) {
 
 	/** Set Device */
 	switch (device) {
-	case KarPlusStrong::Device::SSE3:
-		this->prepareNextClipFunc = KarPlusStrong::prepareNextClipSSE3;
-		this->copyClipFunc = KarPlusStrong::copyClipSSE3;
-		break;
-	case KarPlusStrong::Device::AVX2:
-		this->prepareNextClipFunc = KarPlusStrong::prepareNextClipAVX2;
-		this->copyClipFunc = KarPlusStrong::copyClipAVX2;
-		break;
 	case KarPlusStrong::Device::AVX512:
-		this->prepareNextClipFunc = KarPlusStrong::prepareNextClipAVX512;
-		this->copyClipFunc = KarPlusStrong::copyClipAVX512;
-		break;
+		if (juce::SystemStats::hasAVX512F()) {
+			this->prepareNextClipFunc = KarPlusStrong::prepareNextClipAVX512;
+			this->copyClipFunc = KarPlusStrong::copyClipAVX512;
+			break;
+		}
+	case KarPlusStrong::Device::AVX2:
+		if (juce::SystemStats::hasAVX2()) {
+			this->prepareNextClipFunc = KarPlusStrong::prepareNextClipAVX2;
+			this->copyClipFunc = KarPlusStrong::copyClipAVX2;
+			break;
+		}
+	case KarPlusStrong::Device::SSE3:
+		if (juce::SystemStats::hasSSE3()) {
+			this->prepareNextClipFunc = KarPlusStrong::prepareNextClipSSE3;
+			this->copyClipFunc = KarPlusStrong::copyClipSSE3;
+			break;
+		}
 	}
 }
 
