@@ -227,10 +227,10 @@ target_compile_definitions (SynthEngineDemo PRIVATE
 "JucePlugin_Vst3Category=\"Instrument|Generator|Synth\""
 "JucePlugin_CFBundleIdentifier=org.VocalSharp.VocalShaper.SynthEngineDemo"
 "JucePlugin_VSTNumMidiInputs=16"
-"JucePlugin_VSTNumMidiOutputs=16"
-"JucePlugin_MaxNumInputChannels=2"
-"JucePlugin_MaxNumOutputChannels=2"
-"JucePlugin_PreferredChannelConfigurations={1, 1}, {2, 2}, {1, 2}"
+"JucePlugin_VSTNumMidiOutputs=0"
+"JucePlugin_MaxNumInputChannels=1"
+"JucePlugin_MaxNumOutputChannels=1"
+"JucePlugin_PreferredChannelConfigurations={1, 1}"
 )
 
 if (DEFINED SYNTH_ENGINE_DEMO_OUTPUT_PATH)

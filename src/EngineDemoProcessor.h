@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include <DMDA.h>
+#include "EngineRenderer.h"
 
 class EngineDemoProcessor final : public DMDA::PluginProcessor {
 public:
@@ -37,5 +38,7 @@ private:
 	DMDA::Context* createContext() const override;
 
 private:
+	std::unique_ptr<EngineRenderer> renderer = nullptr;
+
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EngineDemoProcessor)
 };

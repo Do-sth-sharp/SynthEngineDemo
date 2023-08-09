@@ -16,3 +16,42 @@ EngineRenderer::EngineRenderer(int KPSSeed) {
 	/** KPS Renderer */
 	this->kps = std::make_unique<KarPlusStrong>(KPSSeed, device);
 }
+
+void EngineRenderer::releaseData() {
+	juce::ScopedWriteLock locker(this->bufferLock);
+	this->buffer.clear();
+	this->rendered = false;
+}
+
+bool EngineRenderer::isRendered() const {
+	juce::ScopedReadLock locker(this->bufferLock);
+	return this->rendered;
+}
+
+void EngineRenderer::prepare(double sampleRate) {
+	juce::ScopedWriteLock locker(this->bufferLock);
+	if (this->sampleRate != sampleRate) {
+		this->sampleRate = sampleRate;
+		this->releaseData();
+	}
+}
+
+void EngineRenderer::render(const juce::MidiFile& context) {
+	/** Locker */
+	juce::ScopedWriteLock locker(this->bufferLock);
+
+	/** Clear Data */
+	this->releaseData();
+
+	/** Init Buffer */
+	double timeInSeconds = context.getLastTimestamp();
+	int bufferSize = std::ceil(timeInSeconds * this->sampleRate);
+	this->buffer.setSize(1, bufferSize);
+
+	/** TODO Render For Each Track */
+}
+
+void EngineRenderer::getAudio(
+	juce::AudioBuffer<float>& buffer, int64_t timeInSamples) const {
+	/** TODO Get Audio Data */
+}
