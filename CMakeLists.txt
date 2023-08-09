@@ -260,6 +260,9 @@ if (NOT MSVC)
     target_compile_options (SynthEngineDemo PRIVATE
     -fPIC
     -fvisibility=default
+    -msse3
+    -mavx2
+    -mavx512f
     )
 
     if (WIN32)
@@ -449,8 +452,11 @@ target_compile_definitions (TestKarPlusStrong PUBLIC "JUCE_MODAL_LOOPS_PERMITTED
 
 if (NOT MSVC)
     target_compile_options (TestKarPlusStrong PRIVATE
-    -fPIC
+    -fPIE
     -fvisibility=default
+    -msse3
+    -mavx2
+    -mavx512f
     )
 
     if (WIN32)
