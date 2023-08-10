@@ -100,7 +100,7 @@ void EngineRenderer::render(const juce::MidiFile& context) {
 		}
 
 		/** Synth */
-		for (int i = 0; i < totalEvents; i++) {
+		for (int j = 0; j < totalEvents; j++) {
 			/** Check For Stop */
 			if (juce::Thread::currentThreadShouldExit()) {
 				this->releaseData();
@@ -108,7 +108,7 @@ void EngineRenderer::render(const juce::MidiFile& context) {
 			}
 
 			/** Get Current Note */
-			auto event = track->getEventPointer(i);
+			auto event = track->getEventPointer(j);
 			if (!event->message.isNoteOn()) { continue; }
 			auto endEvent = event->noteOffObject;
 
@@ -119,16 +119,21 @@ void EngineRenderer::render(const juce::MidiFile& context) {
 			int startSample = startTime * sampleRate;
 			int endSample = endTime * sampleRate;
 			int noteNumber = event->message.getNoteNumber();
-			double freq = 440 * std::pow(2, static_cast<double>(noteNumber - 69) / 12);
 
 			/** Pitch Param */
 			int paramStartPlace = startSample / PITCH_ACCURACY;
 			int paramEndPlace = endSample / PITCH_ACCURACY;
 			int paramDeviation = startSample - paramStartPlace * PITCH_ACCURACY;
+			
+			/** Caculate Freq */
 			juce::Array<double> freqTemp;
 			freqTemp.resize(paramEndPlace - paramStartPlace);
-
-			/** TODO Caculate Freq */
+			for (int k = 0; k < freqTemp.size(); k++) {
+				double pitchData = pitchTemp.getUnchecked(paramStartPlace + k);
+				double freq =
+					440 * std::pow(2, (noteNumber + pitchData - 69) / 12);
+				freqTemp.setUnchecked(k, freq);
+			}
 
 			/** Synth */
 			if (startSample >= this->buffer.getNumSamples()) { continue; }
@@ -142,5 +147,20 @@ void EngineRenderer::render(const juce::MidiFile& context) {
 
 void EngineRenderer::getAudio(
 	juce::AudioBuffer<float>& buffer, int64_t timeInSamples) const {
-	/** TODO Get Audio Data */
+	/** Lock */
+	juce::ScopedReadLock locker(this->bufferLock);
+
+	/** Check Is Rendered */
+	if (!this->rendered) { return; }
+
+	/** Check Size */
+	int bufferSize = buffer.getNumSamples();
+	int tempSize = this->buffer.getNumSamples();
+	if (static_cast<int64_t>(tempSize) - bufferSize <= timeInSamples) {
+		bufferSize = tempSize - timeInSamples;
+	}
+
+	/** Copy Data */
+	buffer.copyFrom(
+		0, timeInSamples, this->buffer.getReadPointer(0), bufferSize);
 }
