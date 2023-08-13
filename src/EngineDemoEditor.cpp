@@ -43,6 +43,11 @@ void EngineDemoEditor::paint(juce::Graphics& g) {
 	/** Fill Area */
 	g.setColour(laf.findColour(juce::ResizableWindow::ColourIds::backgroundColourId));
 	g.fillRect(area);
+
+	/** Text Area */
+	juce::Rectangle<int> textArea = contentVertical
+		? area.withTrimmedBottom(area.getHeight() / 2)
+		: area.withTrimmedRight(area.getWidth() / 2);
 }
 
 const juce::Rectangle<int> EngineDemoEditor::getContentArea() const {
