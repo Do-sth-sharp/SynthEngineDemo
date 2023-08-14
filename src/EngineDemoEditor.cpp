@@ -40,7 +40,7 @@ void EngineDemoEditor::paint(juce::Graphics& g) {
 	auto area = this->getContentArea();
 	bool contentVertical = area.getHeight() >= area.getWidth();
 
-	/** Fill Area */
+	/** Fill A EngineDemoEditor::rea */
 	g.setColour(laf.findColour(juce::ResizableWindow::ColourIds::backgroundColourId));
 	g.fillRect(area);
 
@@ -48,6 +48,20 @@ void EngineDemoEditor::paint(juce::Graphics& g) {
 	juce::Rectangle<int> textArea = contentVertical
 		? area.withTrimmedBottom(area.getHeight() / 2)
 		: area.withTrimmedRight(area.getWidth() / 2);
+}
+
+void EngineDemoEditor::setWaveShaked(bool waveShaked) {
+	this->waveShaked = waveShaked;
+	this->repaint();
+}
+
+void EngineDemoEditor::setRendered(bool rendered) {
+	this->rendered = rendered;
+	this->repaint();
+}
+
+void EngineDemoEditor::setMidiInfo(const EngineDemoEditor::MidiInfo& info) {
+	/** TODO Update Info */
 }
 
 const juce::Rectangle<int> EngineDemoEditor::getContentArea() const {
