@@ -10,13 +10,14 @@ public:
 	void paint(juce::Graphics& g) override;
 
 	using MidiInfo = std::tuple<int, double, int>;
-	void setWaveShaked(bool waveShaked);
+	void setHandShaked(bool handShaked);
 	void setRendered(bool rendered);
 	void setMidiInfo(const MidiInfo& info);
+	void clearMidiInfo();
 
 private:
 	std::unique_ptr<juce::TextEditor> infoEditor = nullptr;
-	bool waveShaked = false, rendered = false;
+	bool handShaked = false, rendered = false;
 
 	const juce::Rectangle<int> getContentArea() const;
 
