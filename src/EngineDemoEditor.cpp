@@ -49,31 +49,44 @@ void EngineDemoEditor::paint(juce::Graphics& g) {
 		? area.withTrimmedBottom(area.getHeight() / 2)
 		: area.withTrimmedRight(area.getWidth() / 2);
 
-	/** DMDA Status Area */
-	juce::Rectangle<int> DMDAStatusArea = textArea.withHeight(area.getHeight() / 5);
-	juce::String DMDAStatusStr = "DMDA Disconnected";
-	juce::Colour DMDAStatusColour = juce::Colours::red;
-	if (this->handShaked) {
-		DMDAStatusStr = "DMDA Connected";
-		DMDAStatusColour = juce::Colours::green;
+	/** Text Size */
+	int textLineAreaHeight = textArea.getHeight() / 10;
+	{
+		juce::Label label;
+		juce::Font labelFont = label.getFont();
+		int fontHeight = labelFont.getHeight();
+		textLineAreaHeight = fontHeight * 1.5;
 	}
 
-	g.setColour(DMDAStatusColour);
-	g.drawFittedText(
-		DMDAStatusStr, DMDAStatusArea, juce::Justification::centred, 1, 0.5);
+	/** DMDA Status Area */
+	juce::Rectangle<int> DMDAStatusArea = textArea.withHeight(textLineAreaHeight);
+	{
+		juce::String DMDAStatusStr = "DMDA Disconnected";
+		juce::Colour DMDAStatusColour = juce::Colours::red;
+		if (this->handShaked) {
+			DMDAStatusStr = "DMDA Connected";
+			DMDAStatusColour = juce::Colours::green;
+		}
+
+		g.setColour(DMDAStatusColour);
+		g.drawFittedText(
+			DMDAStatusStr, DMDAStatusArea, juce::Justification::centred, 1, 0.5);
+	}
 
 	/** Render Status Area */
 	juce::Rectangle<int> renderStatusArea
-		= textArea.withTrimmedTop(DMDAStatusArea.getHeight()).withTrimmedBottom(
-			area.getHeight() / 5 * 3);
-	juce::String renderStatusStr = "Unrendered";
-	if (this->rendered) {
-		renderStatusStr = "Rendered";
-	}
+		= textArea.withTrimmedTop(
+			DMDAStatusArea.getHeight()).withHeight(textLineAreaHeight);
+	{
+		juce::String renderStatusStr = "Unrendered";
+		if (this->rendered) {
+			renderStatusStr = "Rendered";
+		}
 
-	g.setColour(laf.findColour(juce::Label::ColourIds::textColourId));
-	g.drawFittedText(
-		renderStatusStr, renderStatusArea, juce::Justification::centred, 1, 0.5);
+		g.setColour(laf.findColour(juce::Label::ColourIds::textColourId));
+		g.drawFittedText(
+			renderStatusStr, renderStatusArea, juce::Justification::centred, 1, 0.5);
+	}
 }
 
 void EngineDemoEditor::setHandShaked(bool handShaked) {
