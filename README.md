@@ -1,2 +1,2 @@
 # SynthEngineDemo
-A Demo Synthesizer Engine for VocalShaper.
+A Demo Synthesizer Engine for VocalShaper. (Under development)
