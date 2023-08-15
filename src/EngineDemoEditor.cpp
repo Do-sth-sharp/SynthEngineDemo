@@ -40,7 +40,7 @@ void EngineDemoEditor::paint(juce::Graphics& g) {
 	auto area = this->getContentArea();
 	bool contentVertical = area.getHeight() >= area.getWidth();
 
-	/** Fill A EngineDemoEditor::rea */
+	/** Fill Content Area */
 	g.setColour(laf.findColour(juce::ResizableWindow::ColourIds::backgroundColourId));
 	g.fillRect(area);
 
