@@ -63,9 +63,11 @@ void EngineDemoEditor::paint(juce::Graphics& g) {
 	{
 		juce::String DMDAStatusStr = "DMDA Disconnected";
 		juce::Colour DMDAStatusColour = juce::Colours::red;
-		if (this->handShaked) {
+		switch (this->handShaked){
+		case HandShakeStatus::Connected:
 			DMDAStatusStr = "DMDA Connected";
 			DMDAStatusColour = juce::Colours::green;
+			break;
 		}
 
 		g.setColour(DMDAStatusColour);
@@ -79,8 +81,13 @@ void EngineDemoEditor::paint(juce::Graphics& g) {
 			DMDAStatusArea.getHeight()).withHeight(textLineAreaHeight);
 	{
 		juce::String renderStatusStr = "Unrendered";
-		if (this->rendered) {
+		switch (this->rendered) {
+		case RenderStatus::Rendering:
+			renderStatusStr = "Rendering";
+			break;
+		case RenderStatus::Rendered:
 			renderStatusStr = "Rendered";
+			break;
 		}
 
 		g.setColour(laf.findColour(juce::Label::ColourIds::textColourId));
@@ -89,13 +96,13 @@ void EngineDemoEditor::paint(juce::Graphics& g) {
 	}
 }
 
-void EngineDemoEditor::setHandShaked(bool handShaked) {
-	this->handShaked = handShaked;
+void EngineDemoEditor::setHandShaked(EngineDemoEditor::HandShakeStatus status) {
+	this->handShaked = status;
 	this->repaint();
 }
 
-void EngineDemoEditor::setRendered(bool rendered) {
-	this->rendered = rendered;
+void EngineDemoEditor::setRendered(EngineDemoEditor::RenderStatus status) {
+	this->rendered = status;
 	this->repaint();
 }
 
