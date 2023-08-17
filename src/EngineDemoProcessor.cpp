@@ -1,6 +1,32 @@
 #include "EngineDemoProcessor.h"
 #include "EngineDemoEditor.h"
 
+class EngineDemoContext final : public DMDA::MidiFileContext {
+public:
+	explicit EngineDemoContext(EngineDemoProcessor* parent)
+		: parent(parent) {};
+
+private:
+	void handShakedStateChanged() override {
+		if (auto editor =
+			dynamic_cast<EngineDemoEditor*>(parent->getActiveEditor())) {
+			if (this->isHandShaked()) {
+				editor->setHandShaked(
+					EngineDemoEditor::HandShakeStatus::Connected);
+			}
+			else {
+				editor->setHandShaked(
+					EngineDemoEditor::HandShakeStatus::Disconnected);
+			}
+		}
+	};
+
+private:
+	EngineDemoProcessor* parent = nullptr;
+
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EngineDemoContext)
+};
+
 EngineDemoProcessor::EngineDemoProcessor()
 	: PluginProcessor(BusesProperties()
 		.withOutput("Output", juce::AudioChannelSet::mono(), true)) {
@@ -51,10 +77,30 @@ void EngineDemoProcessor::changeProgramName(
 
 void EngineDemoProcessor::prepareToPlay(double sampleRate, int /*samplesPerBlock*/) {
 	this->renderer->prepare(sampleRate);
+	if (!this->renderer->isRendered()) {
+		juce::MessageManager::callAsync(
+			[editor = EngineDemoEditor::SafePointer(
+				dynamic_cast<EngineDemoEditor*>(this->getActiveEditor()))] {
+					if (editor) {
+						editor->setRendered(
+							EngineDemoEditor::RenderStatus::Unrendered);
+					}
+			}
+		);
+	}
 }
 
 void EngineDemoProcessor::releaseResources() {
 	this->renderer->releaseData();
+	juce::MessageManager::callAsync(
+		[editor = EngineDemoEditor::SafePointer(
+			dynamic_cast<EngineDemoEditor*>(this->getActiveEditor()))] {
+				if (editor) {
+					editor->setRendered(
+						EngineDemoEditor::RenderStatus::Unrendered);
+				}
+		}
+	);
 }
 
 bool EngineDemoProcessor::isBusesLayoutSupported(
@@ -72,8 +118,70 @@ void EngineDemoProcessor::processBlock(
 		/** Get DMDA Context */
 		if (auto DMDAContext =
 			dynamic_cast<DMDA::MidiFileContext*>(this->getContext())) {
+			/** Set Editor State */
+			juce::MessageManager::callAsync(
+				[editor = EngineDemoEditor::SafePointer(
+					dynamic_cast<EngineDemoEditor*>(this->getActiveEditor()))] {
+						if (editor) {
+							editor->setRendered(
+								EngineDemoEditor::RenderStatus::Rendering);
+						}
+				}
+			);
+
+			/** Get Context Data */
 			juce::ScopedReadLock DMDALocker(DMDAContext->getLock());
-			this->renderer->render(DMDAContext->getData());
+			auto& data = DMDAContext->getData();
+
+			/** Context Info */
+			{
+				int trackNum = data.getNumTracks();
+				double totalLength = data.getLastTimestamp();
+				int totalEvents = 0;
+				for (int i = 0; i < trackNum; i++) {
+					auto track = data.getTrack(i);
+					totalEvents += track->getNumEvents();
+				}
+
+				juce::MessageManager::callAsync(
+					[trackNum, totalLength, totalEvents, 
+					editor = EngineDemoEditor::SafePointer(
+						dynamic_cast<EngineDemoEditor*>(this->getActiveEditor()))] {
+							if (editor) {
+								editor->setMidiInfo(
+									EngineDemoEditor::MidiInfo{
+										trackNum, totalLength, totalEvents });
+							}
+					}
+				);
+			}
+
+			/** Render */
+			this->renderer->render(data);
+
+			/** Check Rendered */
+			if (this->renderer->isRendered()) {
+				juce::MessageManager::callAsync(
+					[editor = EngineDemoEditor::SafePointer(
+						dynamic_cast<EngineDemoEditor*>(this->getActiveEditor()))] {
+							if (editor) {
+								editor->setRendered(
+									EngineDemoEditor::RenderStatus::Rendered);
+							}
+					}
+				);
+			}
+			else {
+				juce::MessageManager::callAsync(
+					[editor = EngineDemoEditor::SafePointer(
+						dynamic_cast<EngineDemoEditor*>(this->getActiveEditor()))] {
+							if (editor) {
+								editor->setRendered(
+									EngineDemoEditor::RenderStatus::Unrendered);
+							}
+					}
+				);
+			}
 		}
 	}
 
@@ -101,7 +209,7 @@ void EngineDemoProcessor::setStateInformation(
 }
 
 DMDA::Context* EngineDemoProcessor::createContext() const {
-	return new DMDA::MidiFileContext;
+	return new EngineDemoContext(const_cast<EngineDemoProcessor*>(this));
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
