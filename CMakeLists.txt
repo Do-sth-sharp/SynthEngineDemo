@@ -228,9 +228,9 @@ target_compile_definitions (SynthEngineDemo PRIVATE
 "JucePlugin_CFBundleIdentifier=org.VocalSharp.VocalShaper.SynthEngineDemo"
 "JucePlugin_VSTNumMidiInputs=16"
 "JucePlugin_VSTNumMidiOutputs=0"
-"JucePlugin_MaxNumInputChannels=1"
+"JucePlugin_MaxNumInputChannels=0"
 "JucePlugin_MaxNumOutputChannels=1"
-"JucePlugin_PreferredChannelConfigurations={1, 1}"
+"JucePlugin_PreferredChannelConfigurations={0, 1}"
 )
 
 if (DEFINED SYNTH_ENGINE_DEMO_OUTPUT_PATH)

@@ -105,6 +105,9 @@ void EngineDemoProcessor::releaseResources() {
 
 bool EngineDemoProcessor::isBusesLayoutSupported(
 	const juce::AudioProcessor::BusesLayout& layouts) const {
+	if (layouts.getMainInputChannelSet().size() != 0) {
+		return false;
+	}
 	if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()) {
 		return false;
 	}
