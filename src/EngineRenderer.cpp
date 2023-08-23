@@ -143,6 +143,9 @@ void EngineRenderer::render(const juce::MidiFile& context) {
 				noteLength, freqTemp, PITCH_ACCURACY, paramDeviation);
 		}
 	}
+
+	/** Set Rendered Flag */
+	this->rendered = true;
 }
 
 void EngineRenderer::getAudio(
@@ -157,10 +160,10 @@ void EngineRenderer::getAudio(
 	int bufferSize = buffer.getNumSamples();
 	int tempSize = this->buffer.getNumSamples();
 	if (static_cast<int64_t>(tempSize) - bufferSize <= timeInSamples) {
-		bufferSize = tempSize - timeInSamples;
+		bufferSize = std::max(tempSize - timeInSamples, 0i64);
 	}
 
 	/** Copy Data */
 	buffer.copyFrom(
-		0, timeInSamples, this->buffer.getReadPointer(0), bufferSize);
+		0, 0, &((this->buffer.getReadPointer(0))[timeInSamples]), bufferSize);
 }

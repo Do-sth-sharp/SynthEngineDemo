@@ -30,6 +30,9 @@ private:
 EngineDemoProcessor::EngineDemoProcessor()
 	: PluginProcessor(BusesProperties()
 		.withOutput("Output", juce::AudioChannelSet::mono(), true)) {
+	/** DMDA Context */
+	this->initContext();
+
 	/** Renderer */
 	this->renderer = std::make_unique<EngineRenderer>();
 }
@@ -78,29 +81,19 @@ void EngineDemoProcessor::changeProgramName(
 void EngineDemoProcessor::prepareToPlay(double sampleRate, int /*samplesPerBlock*/) {
 	this->renderer->prepare(sampleRate);
 	if (!this->renderer->isRendered()) {
-		juce::MessageManager::callAsync(
-			[editor = EngineDemoEditor::SafePointer(
-				dynamic_cast<EngineDemoEditor*>(this->getActiveEditor()))] {
-					if (editor) {
-						editor->setRendered(
-							EngineDemoEditor::RenderStatus::Unrendered);
-					}
-			}
-		);
+		if (auto editor = dynamic_cast<EngineDemoEditor*>(this->getActiveEditor())) {
+			editor->setRendered(
+				EngineDemoEditor::RenderStatus::Unrendered);
+		}
 	}
 }
 
 void EngineDemoProcessor::releaseResources() {
 	this->renderer->releaseData();
-	juce::MessageManager::callAsync(
-		[editor = EngineDemoEditor::SafePointer(
-			dynamic_cast<EngineDemoEditor*>(this->getActiveEditor()))] {
-				if (editor) {
-					editor->setRendered(
-						EngineDemoEditor::RenderStatus::Unrendered);
-				}
-		}
-	);
+	if (auto editor = dynamic_cast<EngineDemoEditor*>(this->getActiveEditor())) {
+		editor->setRendered(
+			EngineDemoEditor::RenderStatus::Unrendered);
+	}
 }
 
 bool EngineDemoProcessor::isBusesLayoutSupported(
@@ -134,56 +127,56 @@ void EngineDemoProcessor::processBlock(
 
 			/** Get Context Data */
 			juce::ScopedReadLock DMDALocker(DMDAContext->getLock());
-			auto& data = DMDAContext->getData();
+			if (auto data = DMDAContext->getData()) {
+				/** Context Info */
+				{
+					int trackNum = data->getNumTracks();
+					double totalLength = data->getLastTimestamp();
+					int totalEvents = 0;
+					for (int i = 0; i < trackNum; i++) {
+						auto track = data->getTrack(i);
+						totalEvents += track->getNumEvents();
+					}
 
-			/** Context Info */
-			{
-				int trackNum = data.getNumTracks();
-				double totalLength = data.getLastTimestamp();
-				int totalEvents = 0;
-				for (int i = 0; i < trackNum; i++) {
-					auto track = data.getTrack(i);
-					totalEvents += track->getNumEvents();
+					juce::MessageManager::callAsync(
+						[trackNum, totalLength, totalEvents,
+						editor = EngineDemoEditor::SafePointer(
+							dynamic_cast<EngineDemoEditor*>(this->getActiveEditor()))] {
+								if (editor) {
+									editor->setMidiInfo(
+										EngineDemoEditor::MidiInfo{
+											trackNum, totalLength, totalEvents });
+								}
+						}
+					);
 				}
 
-				juce::MessageManager::callAsync(
-					[trackNum, totalLength, totalEvents, 
-					editor = EngineDemoEditor::SafePointer(
-						dynamic_cast<EngineDemoEditor*>(this->getActiveEditor()))] {
-							if (editor) {
-								editor->setMidiInfo(
-									EngineDemoEditor::MidiInfo{
-										trackNum, totalLength, totalEvents });
-							}
-					}
-				);
-			}
+				/** Render */
+				this->renderer->render(*data);
 
-			/** Render */
-			this->renderer->render(data);
-
-			/** Check Rendered */
-			if (this->renderer->isRendered()) {
-				juce::MessageManager::callAsync(
-					[editor = EngineDemoEditor::SafePointer(
-						dynamic_cast<EngineDemoEditor*>(this->getActiveEditor()))] {
-							if (editor) {
-								editor->setRendered(
-									EngineDemoEditor::RenderStatus::Rendered);
-							}
-					}
-				);
-			}
-			else {
-				juce::MessageManager::callAsync(
-					[editor = EngineDemoEditor::SafePointer(
-						dynamic_cast<EngineDemoEditor*>(this->getActiveEditor()))] {
-							if (editor) {
-								editor->setRendered(
-									EngineDemoEditor::RenderStatus::Unrendered);
-							}
-					}
-				);
+				/** Check Rendered */
+				if (this->renderer->isRendered()) {
+					juce::MessageManager::callAsync(
+						[editor = EngineDemoEditor::SafePointer(
+							dynamic_cast<EngineDemoEditor*>(this->getActiveEditor()))] {
+								if (editor) {
+									editor->setRendered(
+										EngineDemoEditor::RenderStatus::Rendered);
+								}
+						}
+					);
+				}
+				else {
+					juce::MessageManager::callAsync(
+						[editor = EngineDemoEditor::SafePointer(
+							dynamic_cast<EngineDemoEditor*>(this->getActiveEditor()))] {
+								if (editor) {
+									editor->setRendered(
+										EngineDemoEditor::RenderStatus::Unrendered);
+								}
+						}
+					);
+				}
 			}
 		}
 	}
