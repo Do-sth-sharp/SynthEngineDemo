@@ -123,7 +123,7 @@ void EngineRenderer::render(const juce::MidiFile& context) {
 			/** Pitch Param */
 			int paramStartPlace = startSample / PITCH_ACCURACY;
 			int paramEndPlace = endSample / PITCH_ACCURACY;
-			int paramDeviation = startSample - paramStartPlace * PITCH_ACCURACY;
+			int paramOffset = startSample - paramStartPlace * PITCH_ACCURACY;
 			
 			/** Caculate Freq */
 			juce::Array<double> freqTemp;
@@ -140,7 +140,7 @@ void EngineRenderer::render(const juce::MidiFile& context) {
 			int noteLength = std::min(endSample - startSample,
 				this->buffer.getNumSamples() - 1 - startSample);
 			this->kps->synth(this->buffer, this->sampleRate, startSample,
-				noteLength, freqTemp, PITCH_ACCURACY, paramDeviation);
+				noteLength, freqTemp, PITCH_ACCURACY, paramOffset);
 		}
 	}
 

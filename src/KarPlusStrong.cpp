@@ -45,7 +45,7 @@ KarPlusStrong::KarPlusStrong(int seed, KarPlusStrong::Device device) {
 
 bool KarPlusStrong::synth(juce::AudioBuffer<float>& buffer, double sampleRate,
 	int startSample, int length,
-	juce::Array<double> freq, int frameLength, int frameDeviation) const {
+	juce::Array<double> freq, int frameLength, int frameOffset) const {
 	/** Check Size */
 	if (buffer.getNumChannels() < 1) { return false; }
 	if (static_cast<int64_t>(startSample) + length >= buffer.getNumSamples()) { 
@@ -62,7 +62,7 @@ bool KarPlusStrong::synth(juce::AudioBuffer<float>& buffer, double sampleRate,
 	bool tempReverseFlag = false;
 	for (int start = 0, clipLength = 0; start < length - 1; start += clipLength) {
 		/** Get Clip Length */
-		int frameNum = (start + frameDeviation) / frameLength;
+		int frameNum = (start + frameOffset) / frameLength;
 		if (frameNum < freq.size()) {
 			double freqTemp = freq.getUnchecked(frameNum);
 			if (freqTemp >= KPS_FREQ_MIN && freqTemp <= KPS_FREQ_MAX) {

@@ -16,7 +16,7 @@ public:
 
 	bool synth(juce::AudioBuffer<float>& buffer, double sampleRate,
 		int startSample, int length,
-		juce::Array<double> freq, int frameLength, int frameDeviation) const;
+		juce::Array<double> freq, int frameLength, int frameOffset) const;
 
 private:
 	juce::Array<float> noiseSource;
