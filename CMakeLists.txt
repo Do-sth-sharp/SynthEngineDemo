@@ -14,9 +14,9 @@ set (CMAKE_C_STANDARD_REQUIRED ON)
 
 set (CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")#MSVC下使用/MD和/MDd
 
-#=============================================================================================================================
+# =============================================
 # JUCE
-#=============================================================================================================================
+# =============================================
 set (DMDA_ENABLED ON)
 set (JucePlugin_Name "SynthEngineDemo")
 set (JucePlugin_Desc "VocalShaper Synth Engine Demo")
@@ -42,10 +42,9 @@ set (JucePlugin_PreferredChannelConfigurations "{0, 1}")
 
 add_subdirectory (juce-vst3-dev-kit)
 
-#=============================================================================================================================
+# =============================================
 # Target
-#=============================================================================================================================
-
+# =============================================
 file (GLOB_RECURSE TARGET_SRC "src/*.cpp" "src/*.h")
 add_library (SynthEngineDemo SHARED ${TARGET_SRC})
 target_link_libraries (SynthEngineDemo PRIVATE libJUCE)
@@ -169,3 +168,45 @@ else (NOT MSVC)
         )
     endif (CMAKE_BUILD_TYPE STREQUAL Debug)
 endif (NOT MSVC)
+
+# =============================================
+# Target
+# =============================================
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+set (ENGINE_INSTALL_NAME ${PROJECT_NAME})
+
+set (ENGINE_CMAKE_CONFIG_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/${ENGINE_INSTALL_NAME})
+
+install (TARGETS SynthEngineDemo
+	EXPORT ${ENGINE_INSTALL_NAME}Targets
+	RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" OPTIONAL
+)
+
+install (FILES $<TARGET_PDB_FILE:SynthEngineDemo> DESTINATION "${CMAKE_INSTALL_BINDIR}" OPTIONAL)
+
+write_basic_package_version_file (
+	"${CMAKE_CURRENT_BINARY_DIR}/${ENGINE_INSTALL_NAME}ConfigVersion.cmake"
+	VERSION ${PROJECT_VERSION}
+	COMPATIBILITY AnyNewerVersion
+)
+
+configure_package_config_file (
+	"${CMAKE_CURRENT_LIST_DIR}/${ENGINE_INSTALL_NAME}Config.cmake.in"
+	"${CMAKE_CURRENT_BINARY_DIR}/${ENGINE_INSTALL_NAME}Config.cmake"
+	INSTALL_DESTINATION ${ENGINE_CMAKE_CONFIG_INSTALL_DIR}
+	NO_CHECK_REQUIRED_COMPONENTS_MACRO
+)
+
+install (FILES
+	"${CMAKE_CURRENT_BINARY_DIR}/${ENGINE_INSTALL_NAME}Config.cmake"
+	"${CMAKE_CURRENT_BINARY_DIR}/${ENGINE_INSTALL_NAME}ConfigVersion.cmake"
+	DESTINATION ${ENGINE_CMAKE_CONFIG_INSTALL_DIR}
+)
+
+install (EXPORT ${ENGINE_INSTALL_NAME}Targets
+	FILE "${ENGINE_INSTALL_NAME}Targets.cmake"
+	NAMESPACE ${ENGINE_INSTALL_NAME}::
+	DESTINATION ${ENGINE_CMAKE_CONFIG_INSTALL_DIR}
+)
