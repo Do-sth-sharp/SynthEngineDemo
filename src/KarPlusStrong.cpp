@@ -162,8 +162,13 @@ void KarPlusStrong::copyClipSSE3(
 	__m128 decayDifferData = _mm_set1_ps(decayDiffer);
 	__m128 sizeM1Data = _mm_set1_ps(size - 1);
 	__m128 startDecayData = _mm_set1_ps(startDecay);
+#if JUCE_MSVC
 	_MM_ALIGN16 float incrementalCore[4] = { 0, 1, 2, 3 };
 	__m128 incrementalCoreData = _mm_load_ps(incrementalCore);
+#else
+    float incrementalCore[4] = { 0, 1, 2, 3 };
+    __m128 incrementalCoreData = _mm_loadu_ps(incrementalCore);
+#endif
 
 	/** Caculate Loop */
 	for (int i = 0; i + 4 <= size; i += 4) {

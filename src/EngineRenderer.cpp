@@ -160,7 +160,7 @@ void EngineRenderer::getAudio(
 	int bufferSize = buffer.getNumSamples();
 	int tempSize = this->buffer.getNumSamples();
 	if (static_cast<int64_t>(tempSize) - bufferSize <= timeInSamples) {
-		bufferSize = std::max(tempSize - timeInSamples, 0i64);
+		bufferSize = std::max(tempSize - timeInSamples, (int64_t)0);
 	}
 
 	/** Copy Data */

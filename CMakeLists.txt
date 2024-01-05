@@ -47,46 +47,45 @@ add_subdirectory (juce-vst3-dev-kit)
 # =============================================
 file (GLOB_RECURSE TARGET_SRC "src/*.cpp" "src/*.h")
 add_library (SynthEngineDemo SHARED ${TARGET_SRC})
-target_link_libraries (SynthEngineDemo PRIVATE libJUCE)
+target_link_libraries (SynthEngineDemo PRIVATE juce)
 set_target_properties (SynthEngineDemo PROPERTIES
   PREFIX "" OUTPUT_NAME "SynthEngineDemo" SUFFIX ".vst3")
 
 if (NOT MSVC)
     target_compile_options (SynthEngineDemo PRIVATE
-    -pthread
-    -fPIC
-    -fvisibility=default
-    -msse3
-    -mavx2
-    -mavx512f
+			-pthread
+			-fPIC
+			-fvisibility=hidden
+			-fvisibility-inlines-hidden
+			-msse3
+			-mavx2
+			-mavx512f
     )
+	target_link_options (SynthEngineDemo PRIVATE
+			-shared
+			-fvisibility=hidden
+			-fvisibility-inlines-hidden
+	)
 
     if (WIN32)
         target_link_libraries (SynthEngineDemo PRIVATE
             -m64
             -s
-            -lgdi32
-            -luser32
-            -lkernel32
-            -lcomctl32
-            -lwinmm
-            -luuid
-            -lwsock32
-            -lwininet
-            -lversion
-            -lole32
-            -lws2_32
-            -loleaut32
-            -limm32
-            -lcomdlg32
-            -lshlwapi
-            -lrpcrt4
-            -lopengl32
+			-lcomctl32
+			-lwinmm
+			-lwsock32
+			-lwininet
+			-lversion
+			-lws2_32
+			-loleaut32
+			-limm32
+			-lshlwapi
+			-lrpcrt4
+			-lopengl32
+			-ldxgi
         )
     elseif (UNIX AND NOT APPLE)
         target_link_libraries (SynthEngineDemo PRIVATE
-            -shared
-            -fvisibility=default
             ${RT}
             ${DL}
             ${PTHREAD}
@@ -184,7 +183,9 @@ install (TARGETS SynthEngineDemo
 	RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" OPTIONAL
 )
 
-install (FILES $<TARGET_PDB_FILE:SynthEngineDemo> DESTINATION "${CMAKE_INSTALL_BINDIR}" OPTIONAL)
+if (MSVC)
+	install (FILES $<TARGET_PDB_FILE:SynthEngineDemo> DESTINATION "${CMAKE_INSTALL_BINDIR}" OPTIONAL)
+endif (MSVC)
 
 write_basic_package_version_file (
 	"${CMAKE_CURRENT_BINARY_DIR}/${ENGINE_INSTALL_NAME}ConfigVersion.cmake"
