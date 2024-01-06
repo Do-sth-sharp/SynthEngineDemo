@@ -1,3 +1,3 @@
 [submodule "juce-vst3-dev-kit"]
 	path = juce-vst3-dev-kit
-	url = https://github.com/Do-sth-sharp/juce-vst3-dev-kit
+	url = ../../Do-sth-sharp/juce-vst3-dev-kit
