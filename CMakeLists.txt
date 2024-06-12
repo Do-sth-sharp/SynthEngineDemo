@@ -169,7 +169,7 @@ else (NOT MSVC)
 endif (NOT MSVC)
 
 # =============================================
-# Target
+# Install
 # =============================================
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
