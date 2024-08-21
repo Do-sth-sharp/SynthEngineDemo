@@ -39,6 +39,12 @@ set (JucePlugin_VSTNumMidiOutputs "0")
 set (JucePlugin_MaxNumInputChannels "0")
 set (JucePlugin_MaxNumOutputChannels "1")
 set (JucePlugin_PreferredChannelConfigurations "{0, 1}")
+set (JucePlugin_Enable_ARA ON)
+set (JucePlugin_ARACompatibleArchiveIDs "")
+set (JucePlugin_ARAContentTypes "0x00")
+set (JucePlugin_ARATransformationFlags "0x00")
+set (JucePlugin_ARAFactoryID "")
+set (JucePlugin_ARADocumentArchiveID "")
 
 add_subdirectory (juce-vst3-dev-kit)
 
