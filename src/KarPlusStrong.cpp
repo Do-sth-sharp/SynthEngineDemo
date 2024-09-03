@@ -2,6 +2,10 @@
 
 #include <random>
 
+#if (!JUCE_MSVC) && (__SSE3__ || __AVX2__ || __AVX512F__)
+#include <immintrin.h>
+#endif //(!JUCE_MSVC) && (__SSE3__ || __AVX2__ || __AVX512F__)
+
 #define KPS_SAMPLERATE_MAX 192000
 #define KPS_FREQ_MIN 8.2
 #define KPS_FREQ_MAX 12543.9
@@ -118,6 +122,7 @@ void KarPlusStrong::copyClip(
 	}
 }
 
+#if __SSE3__ || JUCE_MSVC
 void KarPlusStrong::prepareNextClipSSE3(
 	const float* source0, float* source1, int size) {
 	jassert(source0 && source1);
@@ -197,6 +202,22 @@ void KarPlusStrong::copyClipSSE3(
 	}
 }
 
+#else //__SSE3__ || JUCE_MSVC
+void KarPlusStrong::prepareNextClipSSE3(
+	const float* source0, float* source1, int size) {
+	KarPlusStrong::prepareNextClip(source0, source1, size);
+}
+
+void KarPlusStrong::copyClipSSE3(
+	const float* src, float* dst,
+	float startDecay, float endDecay,
+	int size) {
+	KarPlusStrong::copyClip(src, dst, startDecay, endDecay, size);
+}
+
+#endif //__SSE3__ || JUCE_MSVC
+
+#if __AVX2__ || JUCE_MSVC
 void KarPlusStrong::prepareNextClipAVX2(
 	const float* source0, float* source1, int size) {
 	jassert(source0 && source1);
@@ -271,6 +292,22 @@ void KarPlusStrong::copyClipAVX2(
 	}
 }
 
+#else //__AVX2__ || JUCE_MSVC
+void KarPlusStrong::prepareNextClipAVX2(
+		const float* source0, float* source1, int size) {
+	KarPlusStrong::prepareNextClipSSE3(source0, source1, size);
+}
+
+void KarPlusStrong::copyClipAVX2(
+		const float* src, float* dst,
+		float startDecay, float endDecay,
+		int size) {
+	KarPlusStrong::copyClipSSE3(src, dst, startDecay, endDecay, size);
+}
+
+#endif //__AVX2__ || JUCE_MSVC
+
+#if __AVX512F__ || JUCE_MSVC
 void KarPlusStrong::prepareNextClipAVX512(
 	const float* source0, float* source1, int size) {
 	jassert(source0 && source1);
@@ -345,3 +382,18 @@ void KarPlusStrong::copyClipAVX512(
 		}
 	}
 }
+
+#else //__AVX512F__ || JUCE_MSVC
+void KarPlusStrong::prepareNextClipAVX512(
+		const float* source0, float* source1, int size) {
+	KarPlusStrong::prepareNextClipAVX2(source0, source1, size);
+}
+
+void KarPlusStrong::copyClipAVX512(
+		const float* src, float* dst,
+		float startDecay, float endDecay,
+		int size) {
+	KarPlusStrong::copyClipAVX2(src, dst, startDecay, endDecay, size);
+}
+
+#endif //__AVX512F__ || JUCE_MSVC

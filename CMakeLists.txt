@@ -63,9 +63,6 @@ if (NOT MSVC)
 			-fPIC
 			-fvisibility=hidden
 			-fvisibility-inlines-hidden
-			-msse3
-			-mavx2
-			-mavx512f
     )
 	target_link_options (SynthEngineDemo PRIVATE
 			-shared
