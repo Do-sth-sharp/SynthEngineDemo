@@ -211,8 +211,3 @@ DMDA::Context* EngineDemoProcessor::createContext() const {
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
 	return new EngineDemoProcessor();
 }
-
-const ARA::ARAFactory* JUCE_CALLTYPE createARAFactory() {
-	/** TODO */
-	return nullptr;
-}
