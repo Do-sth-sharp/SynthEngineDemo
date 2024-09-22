@@ -4,12 +4,16 @@
 
 class ARAArchieveWriter final {
 public:
-	ARAArchieveWriter(const juce::ARAStoreObjectsFilter* filter);
+	using ProgressFunc = std::function<void(float)>;
+	ARAArchieveWriter(
+		const juce::ARAStoreObjectsFilter* filter,
+		const ProgressFunc& reportProgress);
 
 	bool write(juce::ARAOutputStream& stream);
 
 private:
 	const juce::ARAStoreObjectsFilter* const filter;
+	const ProgressFunc reportProgress;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ARAArchieveWriter)
 };

@@ -16,7 +16,11 @@ bool ARADocumentController::doRestoreObjectsFromStream(
 bool ARADocumentController::doStoreObjectsToStream(
 	juce::ARAOutputStream& output,
 	const juce::ARAStoreObjectsFilter* filter) {
-	ARAArchieveWriter writer(filter);
+	auto reportProgress = [archivingController = this->getDocumentController()->getHostArchivingController()](float p) {
+			archivingController->notifyDocumentArchivingProgress(p);
+		};
+
+	ARAArchieveWriter writer(filter, reportProgress);
 	return writer.write(output);
 }
 
