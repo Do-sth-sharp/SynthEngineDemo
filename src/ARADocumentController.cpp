@@ -9,7 +9,11 @@ ARADocumentController::ARADocumentController(
 bool ARADocumentController::doRestoreObjectsFromStream(
 	juce::ARAInputStream& input,
 	const juce::ARARestoreObjectsFilter* filter) {
-	ARAArchieveReader reader(filter);
+	auto reportProgress = [archivingController = this->getDocumentController()->getHostArchivingController()](float p) {
+		archivingController->notifyDocumentUnarchivingProgress(p);
+		};
+
+	ARAArchieveReader reader(filter, reportProgress);
 	return reader.read(input);
 }
 

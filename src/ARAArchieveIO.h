@@ -20,12 +20,16 @@ private:
 
 class ARAArchieveReader final {
 public:
-	ARAArchieveReader(const juce::ARARestoreObjectsFilter* filter);
+	using ProgressFunc = std::function<void(float)>;
+	ARAArchieveReader(
+		const juce::ARARestoreObjectsFilter* filter,
+		const ProgressFunc& reportProgress);
 
 	bool read(juce::ARAInputStream& stream);
 
 private:
 	const juce::ARARestoreObjectsFilter* const filter;
+	const ProgressFunc reportProgress;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ARAArchieveReader)
 };
