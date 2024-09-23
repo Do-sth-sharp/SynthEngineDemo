@@ -1,5 +1,6 @@
 ﻿#include "ARADocumentController.h"
 #include "ARAArchieveIO.h"
+#include "ARARenderer.h"
 
 ARADocumentController::ARADocumentController(
 	const ARA::PlugIn::PlugInEntry* entry,
@@ -29,8 +30,7 @@ bool ARADocumentController::doStoreObjectsToStream(
 }
 
 juce::ARAPlaybackRenderer* ARADocumentController::doCreatePlaybackRenderer() {
-	/** TODO */
-	return nullptr;
+	return new ARAPlaybackRenderer{ this->getDocumentController() };
 }
 
 const ARA::ARAFactory* JUCE_CALLTYPE createARAFactory() {

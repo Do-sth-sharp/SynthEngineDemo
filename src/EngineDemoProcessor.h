@@ -1,10 +1,11 @@
-#pragma once
+﻿#pragma once
 
 #include <JuceHeader.h>
-#include <DMDA.h>
 #include "EngineRenderer.h"
 
-class EngineDemoProcessor final : public DMDA::PluginProcessor {
+class EngineDemoProcessor final
+	: public juce::AudioProcessor,
+	public juce::AudioProcessorARAExtension {
 public:
 	EngineDemoProcessor();
 	~EngineDemoProcessor();
@@ -33,9 +34,6 @@ public:
 
 	void getStateInformation(juce::MemoryBlock& destData) override;
 	void setStateInformation(const void* data, int sizeInBytes) override;
-
-private:
-	DMDA::Context* createContext() const override;
 
 private:
 	std::unique_ptr<EngineRenderer> renderer = nullptr;
