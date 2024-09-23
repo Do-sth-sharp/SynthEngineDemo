@@ -17,7 +17,6 @@ set (CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")#MSVC
 # =============================================
 # JUCE
 # =============================================
-set (DMDA_ENABLED ON)
 set (JucePlugin_Name "SynthEngineDemo")
 set (JucePlugin_Desc "VocalShaper Synth Engine Demo")
 set (JucePlugin_Manufacturer "VocalSharp Org.")
