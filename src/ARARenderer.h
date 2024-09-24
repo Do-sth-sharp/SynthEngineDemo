@@ -7,7 +7,7 @@ public:
 	ARAPlaybackRenderer(
 		ARA::PlugIn::DocumentController* dc);
 
-private:
+public:
 	void prepareToPlay(double sampleRateIn,
 		int maximumSamplesPerBlockIn,
 		int numChannelsIn,
@@ -18,5 +18,6 @@ private:
 		juce::AudioProcessor::Realtime realtime,
 		const juce::AudioPlayHead::PositionInfo& positionInfo) noexcept override;
 
+private:
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ARAPlaybackRenderer)
 };
