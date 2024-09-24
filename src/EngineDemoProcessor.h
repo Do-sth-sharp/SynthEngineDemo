@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include <JuceHeader.h>
-#include "EngineRenderer.h"
 
 class EngineDemoProcessor final
 	: public juce::AudioProcessor,
@@ -36,7 +35,5 @@ public:
 	void setStateInformation(const void* data, int sizeInBytes) override;
 
 private:
-	std::unique_ptr<EngineRenderer> renderer = nullptr;
-
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EngineDemoProcessor)
 };

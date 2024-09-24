@@ -4,10 +4,7 @@
 
 EngineDemoProcessor::EngineDemoProcessor()
 	: AudioProcessor(BusesProperties()
-		.withOutput("Output", juce::AudioChannelSet::mono(), true)) {
-	/** Renderer */
-	this->renderer = std::make_unique<EngineRenderer>();
-}
+		.withOutput("Output", juce::AudioChannelSet::mono(), true)) {}
 
 EngineDemoProcessor::~EngineDemoProcessor() {}
 
@@ -58,27 +55,13 @@ void EngineDemoProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) 
 			juce::ARARenderer::AlwaysNonRealtime::no);
 	}
 
-	/** Audio Render Thread */
-	this->renderer->prepare(sampleRate);
-	if (!this->renderer->isRendered()) {
-		if (auto editor = dynamic_cast<EngineDemoEditor*>(this->getActiveEditor())) {
-			editor->setRendered(
-				EngineDemoEditor::RenderStatus::Unrendered);
-		}
-	}
+	/** TODO Prepare Normal Synth */
 }
 
 void EngineDemoProcessor::releaseResources() {
 	/** ARA Playback Renderer */
 	if (auto playbackRenderer = this->getPlaybackRenderer<ARAPlaybackRenderer>()) {
 		playbackRenderer->releaseResources();
-	}
-
-	/** Audio Render Thread */
-	this->renderer->releaseData();
-	if (auto editor = dynamic_cast<EngineDemoEditor*>(this->getActiveEditor())) {
-		editor->setRendered(
-			EngineDemoEditor::RenderStatus::Unrendered);
 	}
 }
 
@@ -99,9 +82,10 @@ void EngineDemoProcessor::processBlock(
 	if (auto playbackRenderer = this->getPlaybackRenderer<ARAPlaybackRenderer>()) {
 		playbackRenderer->processBlock(buffer, Realtime::yes,
 			this->getPlayHead()->getPosition().orFallback(juce::AudioPlayHead::PositionInfo{}));
+		return;
 	}
 
-	/** TODO */
+	/** TODO Normal Synth */
 }
 
 bool EngineDemoProcessor::hasEditor() const {

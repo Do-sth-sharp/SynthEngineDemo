@@ -1,6 +1,8 @@
 ﻿#pragma once
 
 #include <JuceHeader.h>
+#include "ARAContext.h"
+#include "ARARenderThread.h"
 
 class ARAPlaybackRenderer final : public juce::ARAPlaybackRenderer {
 public:
@@ -19,5 +21,8 @@ public:
 		const juce::AudioPlayHead::PositionInfo& positionInfo) noexcept override;
 
 private:
+	ARAContext context;
+	std::unique_ptr<ARARenderThread> renderer = nullptr;
+
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ARAPlaybackRenderer)
 };

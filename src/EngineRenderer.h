@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <JuceHeader.h>
 #include "KarPlusStrong.h"
@@ -10,13 +10,15 @@ public:
 	void releaseData();
 	bool isRendered() const;
 	void prepare(double sampleRate);
-	void render(const juce::MidiFile& context);
+	void render(const juce::MidiMessageSequence& context);
 	void getAudio(juce::AudioBuffer<float>& buffer, int64_t timeInSamples) const;
+
+	double getSampleRate() const;
 
 private:
 	std::unique_ptr<KarPlusStrong> kps = nullptr;
-
-	juce::ReadWriteLock bufferLock;
+		
+	mutable juce::ReadWriteLock bufferLock;
 	juce::AudioBuffer<float> buffer;
 	bool rendered = false;
 	double sampleRate = 48000;

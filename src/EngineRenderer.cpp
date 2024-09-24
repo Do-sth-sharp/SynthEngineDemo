@@ -1,4 +1,4 @@
-#include "EngineRenderer.h"
+﻿#include "EngineRenderer.h"
 
 #define PITCH_ACCURACY 100
 #define MIDI_PITCH_MAX 8191
@@ -40,7 +40,7 @@ void EngineRenderer::prepare(double sampleRate) {
 	}
 }
 
-void EngineRenderer::render(const juce::MidiFile& context) {
+void EngineRenderer::render(const juce::MidiMessageSequence& context) {
 	/** Locker */
 	juce::ScopedWriteLock locker(this->bufferLock);
 
@@ -48,15 +48,14 @@ void EngineRenderer::render(const juce::MidiFile& context) {
 	this->releaseData();
 
 	/** Init Buffer */
-	double timeInSeconds = context.getLastTimestamp();
+	double timeInSeconds = context.getEndTime();
 	int bufferSize = std::ceil(timeInSeconds * this->sampleRate);
 	this->buffer.setSize(1, bufferSize);
 
-	/** Render For Each Track */
-	for (int i = 0; i < context.getNumTracks(); i++) {
-		/** Get Track */
-		auto track = context.getTrack(i);
-		int totalEvents = track->getNumEvents();
+	/** Render For Track */
+	{
+		/** Get Track Attribute */
+		int totalEvents = context.getNumEvents();
 
 		/** Param Temp */
 		juce::Array<double> pitchTemp;
@@ -68,7 +67,7 @@ void EngineRenderer::render(const juce::MidiFile& context) {
 			double lastPitchData = 0;
 			for (int j = 0; j < totalEvents; j++) {
 				/** Get Current Note */
-				auto event = track->getEventPointer(j);
+				auto event = context.getEventPointer(j);
 				if (!event->message.isPitchWheel()) { continue; }
 
 				/** Get Event Time */
@@ -108,14 +107,14 @@ void EngineRenderer::render(const juce::MidiFile& context) {
 			}
 
 			/** Get Current Note */
-			auto event = track->getEventPointer(j);
+			auto event = context.getEventPointer(j);
 			if (!event->message.isNoteOn()) { continue; }
 			auto endEvent = event->noteOffObject;
 
 			/** Get Note Info */
 			double startTime = event->message.getTimeStamp();
 			double endTime =
-				endEvent ? endEvent->message.getTimeStamp() : track->getEndTime();
+				endEvent ? endEvent->message.getTimeStamp() : context.getEndTime();
 			int startSample = startTime * sampleRate;
 			int endSample = endTime * sampleRate;
 			int noteNumber = event->message.getNoteNumber();
@@ -151,7 +150,8 @@ void EngineRenderer::render(const juce::MidiFile& context) {
 void EngineRenderer::getAudio(
 	juce::AudioBuffer<float>& buffer, int64_t timeInSamples) const {
 	/** Lock */
-	juce::ScopedReadLock locker(this->bufferLock);
+	juce::ScopedTryReadLock locker(this->bufferLock);
+	if (!locker.isLocked()) { return; }
 
 	/** Check Is Rendered */
 	if (!this->rendered) { return; }
@@ -164,6 +164,13 @@ void EngineRenderer::getAudio(
 	}
 
 	/** Copy Data */
-	buffer.copyFrom(
-		0, 0, &((this->buffer.getReadPointer(0))[timeInSamples]), bufferSize);
+	int channelNum = buffer.getNumChannels();
+	for (int i = 0; i < channelNum; i++) {
+		buffer.copyFrom(
+			i, 0, &((this->buffer.getReadPointer(0))[timeInSamples]), bufferSize);
+	}
+}
+
+double EngineRenderer::getSampleRate() const {
+	return this->sampleRate;
 }
