@@ -6,6 +6,7 @@ class ARAContext final {
 public:
 	ARAContext() = default;
 
+	void setData(const juce::ARAMusicalContext* context);
 	const juce::MidiMessageSequence getData() const;
 
 private:
