@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <JuceHeader.h>
+#include <ARASharedObject.h>
 #include "KarPlusStrong.h"
 
 class EngineRenderer final {
@@ -10,7 +11,10 @@ public:
 	void releaseData();
 	bool isRendered() const;
 	void prepare(double sampleRate);
-	void render(const juce::MidiMessageSequence& context);
+	void render(
+		const juce::Array<ARA::ARAContentNote>& notes,
+		const juce::Array<ARAExtension::ARAContentIntParam>& pitchs,
+		double totalLength);
 	void getAudio(juce::AudioBuffer<float>& buffer, int64_t timeInSamples) const;
 
 	double getSampleRate() const;

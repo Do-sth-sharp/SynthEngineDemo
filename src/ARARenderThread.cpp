@@ -46,10 +46,10 @@ void ARARenderThread::getAudioData(
 
 void ARARenderThread::run() {
 	/** Get Context */
-	auto data = this->context.getData();
+	auto [notes, pitchs, length] = this->context.getData();
 
 	/** Synth */
-	this->renderer->render(data);
+	this->renderer->render(notes, pitchs, length);
 }
 
 void ARARenderThread::stopInternal() {

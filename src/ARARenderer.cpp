@@ -22,6 +22,7 @@ void ARAPlaybackRenderer::releaseResources() {
 bool ARAPlaybackRenderer::processBlock(juce::AudioBuffer<float>& buffer,
 	juce::AudioProcessor::Realtime /*realtime*/,
 	const juce::AudioPlayHead::PositionInfo& positionInfo) noexcept {
-	this->renderer->getAudioData(buffer, positionInfo.getTimeInSamples().orFallback(0));
+	/** TODO Get Region Data */
+	//this->renderer->getAudioData(buffer, positionInfo.getTimeInSamples().orFallback(0));
 	return true;
 }

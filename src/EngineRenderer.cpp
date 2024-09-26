@@ -40,7 +40,10 @@ void EngineRenderer::prepare(double sampleRate) {
 	}
 }
 
-void EngineRenderer::render(const juce::MidiMessageSequence& context) {
+void EngineRenderer::render(
+	const juce::Array<ARA::ARAContentNote>& notes,
+	const juce::Array<ARAExtension::ARAContentIntParam>& pitchs,
+	double totalLength) {
 	/** Locker */
 	juce::ScopedWriteLock locker(this->bufferLock);
 
@@ -48,14 +51,11 @@ void EngineRenderer::render(const juce::MidiMessageSequence& context) {
 	this->releaseData();
 
 	/** Init Buffer */
-	double timeInSeconds = context.getEndTime();
-	int bufferSize = std::ceil(timeInSeconds * this->sampleRate);
+	int bufferSize = std::ceil(totalLength * this->sampleRate);
 	this->buffer.setSize(1, bufferSize);
 
 	/** Render For Track */
 	{
-		/** Get Track Attribute */
-		int totalEvents = context.getNumEvents();
 
 		/** Param Temp */
 		juce::Array<double> pitchTemp;
@@ -65,18 +65,17 @@ void EngineRenderer::render(const juce::MidiMessageSequence& context) {
 		{
 			int lastParamPlace = 0;
 			double lastPitchData = 0;
-			for (int j = 0; j < totalEvents; j++) {
-				/** Get Current Note */
-				auto event = context.getEventPointer(j);
-				if (!event->message.isPitchWheel()) { continue; }
+			for (int j = 0; j < pitchs.size(); j++) {
+				/** Get Current Param */
+				auto event = pitchs.getUnchecked(j);
 
 				/** Get Event Time */
-				double time = event->message.getTimeStamp();
+				double time = event.timeSec;
 				int samplePlace = time * this->sampleRate;
 				int paramPlace = samplePlace / PITCH_ACCURACY;
 
 				/** Get Pitch Value */
-				int pitchValue = event->message.getPitchWheelValue();
+				int pitchValue = event.value;
 				double pitchData = (pitchValue >= 0)
 					? (static_cast<double>(pitchValue) / MIDI_PITCH_MAX)
 					: (static_cast<double>(pitchValue) / MIDI_PITCH_MIN);
@@ -99,7 +98,7 @@ void EngineRenderer::render(const juce::MidiMessageSequence& context) {
 		}
 
 		/** Synth */
-		for (int j = 0; j < totalEvents; j++) {
+		for (int j = 0; j < notes.size(); j++) {
 			/** Check For Stop */
 			if (juce::Thread::currentThreadShouldExit()) {
 				this->releaseData();
@@ -107,17 +106,14 @@ void EngineRenderer::render(const juce::MidiMessageSequence& context) {
 			}
 
 			/** Get Current Note */
-			auto event = context.getEventPointer(j);
-			if (!event->message.isNoteOn()) { continue; }
-			auto endEvent = event->noteOffObject;
+			auto event = notes.getUnchecked(j);
 
 			/** Get Note Info */
-			double startTime = event->message.getTimeStamp();
-			double endTime =
-				endEvent ? endEvent->message.getTimeStamp() : context.getEndTime();
+			double startTime = event.startPosition;
+			double endTime = startTime + event.noteDuration;
 			int startSample = startTime * sampleRate;
 			int endSample = endTime * sampleRate;
-			int noteNumber = event->message.getNoteNumber();
+			int noteNumber = std::round(std::log2(event.frequency / 440) * 12) + 69;
 
 			/** Pitch Param */
 			int paramStartPlace = startSample / PITCH_ACCURACY;

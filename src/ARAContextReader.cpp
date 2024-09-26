@@ -20,7 +20,7 @@ const void* ARAContextReaderBase::getDataForEvent(int32_t eventIndex) noexcept {
 }
 
 ARAContextNoteReader::ARAContextNoteReader(const juce::ARAMusicalContext* context)
-	: ARAContextReaderBase(context, ARAExtension::ARAContentTypeNotePlus) {}
+	: ARAContextReaderBase(context, ARAExtension::ARAContentTypeNote) {}
 
 ARAContextPitchReader::ARAContextPitchReader(const juce::ARAMusicalContext* context)
 	: ARAContextReaderBase(context, ARAExtension::ARAContentTypePitchWheel) {}
