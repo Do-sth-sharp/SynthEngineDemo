@@ -40,13 +40,16 @@ void ARARenderThread::releaseData() {
 }
 
 void ARARenderThread::getAudioData(
-	juce::AudioBuffer<float>& buffer, int64_t timeInSamples) const {
-	this->renderer->getAudio(buffer, timeInSamples);
+	juce::AudioBuffer<float>& buffer,
+	int64_t timeInSamples,
+	int64_t bufferPos,
+	int64_t length) const {
+	this->renderer->getAudio(buffer, timeInSamples, bufferPos, length);
 }
 
 void ARARenderThread::run() {
 	/** Get Context */
-	auto [notes, pitchs, length] = this->context.getData();
+	auto [notes, pitchs, length] = this->context.getContextData();
 
 	/** Synth */
 	this->renderer->render(notes, pitchs, length);

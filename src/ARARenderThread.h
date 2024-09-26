@@ -14,7 +14,11 @@ public:
 
 	void releaseData();
 
-	void getAudioData(juce::AudioBuffer<float>& buffer, int64_t timeInSamples) const;
+	void getAudioData(
+		juce::AudioBuffer<float>& buffer,
+		int64_t timeInSamples,
+		int64_t bufferPos,
+		int64_t length) const;
 
 private:
 	void run() override;

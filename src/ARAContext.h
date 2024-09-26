@@ -9,17 +9,33 @@ public:
 
 	using NoteList = juce::Array<ARA::ARAContentNote>;
 	using PitchList = juce::Array<ARAExtension::ARAContentIntParam>;
-	void setData(
+	void setContextData(
 		ARA::PlugIn::ContentReader* noteReader,
 		ARA::PlugIn::ContentReader* pitchReader);
-	const std::tuple<NoteList, PitchList, double> getData() const;
-	double getLength() const;
+	const std::tuple<NoteList, PitchList, double> getContextData() const;
+	double getContextLength() const;
+
+	void setSequenceData(
+		const juce::ARARegionSequence* sequence);
+
+	/** StartTimeInSequence, StartTimeInContext, Length */
+	using TimeRangeMap = std::tuple<double, double, double>;
+	using TimeRangeList = juce::Array<TimeRangeMap>;
+	const TimeRangeList doMapTime(double startTime, double length) const;
+	const TimeRangeList doMapTimeRealTime(double startTime, double length) const;
 
 private:
-	juce::ReadWriteLock contextLock;
+	mutable juce::ReadWriteLock contextLock;
 	NoteList notes;
 	PitchList pitchs;
-	double totalLength = 0;
+	double contextLength = 0;
+
+	struct Region final {
+		double startInSeq, endInSeq;
+		double startInContext, endInContext;
+	};
+	using RegionList = juce::Array<Region>;
+	RegionList regions;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ARAContext)
 };

@@ -144,7 +144,10 @@ void EngineRenderer::render(
 }
 
 void EngineRenderer::getAudio(
-	juce::AudioBuffer<float>& buffer, int64_t timeInSamples) const {
+	juce::AudioBuffer<float>& buffer,
+	int64_t timeInSamples,
+	int64_t bufferPos,
+	int64_t length) const {
 	/** Lock */
 	juce::ScopedTryReadLock locker(this->bufferLock);
 	if (!locker.isLocked()) { return; }
@@ -153,17 +156,17 @@ void EngineRenderer::getAudio(
 	if (!this->rendered) { return; }
 
 	/** Check Size */
-	int bufferSize = buffer.getNumSamples();
+	length = std::min(buffer.getNumSamples() - bufferPos, length);
 	int tempSize = this->buffer.getNumSamples();
-	if (static_cast<int64_t>(tempSize) - bufferSize <= timeInSamples) {
-		bufferSize = std::max(tempSize - timeInSamples, (int64_t)0);
+	if (static_cast<int64_t>(tempSize) - length <= timeInSamples) {
+		length = std::max(tempSize - timeInSamples, (int64_t)0);
 	}
 
 	/** Copy Data */
 	int channelNum = buffer.getNumChannels();
 	for (int i = 0; i < channelNum; i++) {
-		buffer.copyFrom(
-			i, 0, &((this->buffer.getReadPointer(0))[timeInSamples]), bufferSize);
+		buffer.addFrom(
+			i, bufferPos, &((this->buffer.getReadPointer(0))[timeInSamples]), length);
 	}
 }
 

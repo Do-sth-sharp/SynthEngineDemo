@@ -80,9 +80,10 @@ void EngineDemoProcessor::processBlock(
 	juce::AudioBuffer<float>& buffer, juce::MidiBuffer& /*midiMessages*/) {
 	/** ARA Playback Renderer */
 	if (auto playbackRenderer = this->getPlaybackRenderer<ARAPlaybackRenderer>()) {
-		playbackRenderer->processBlock(buffer, Realtime::yes,
-			this->getPlayHead()->getPosition().orFallback(juce::AudioPlayHead::PositionInfo{}));
-		return;
+		if (playbackRenderer->processBlock(buffer, Realtime::yes,
+			this->getPlayHead()->getPosition().orFallback(juce::AudioPlayHead::PositionInfo{}))) {
+			return;
+		}
 	}
 
 	/** TODO Normal Synth */

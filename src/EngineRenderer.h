@@ -15,7 +15,11 @@ public:
 		const juce::Array<ARA::ARAContentNote>& notes,
 		const juce::Array<ARAExtension::ARAContentIntParam>& pitchs,
 		double totalLength);
-	void getAudio(juce::AudioBuffer<float>& buffer, int64_t timeInSamples) const;
+	void getAudio(
+		juce::AudioBuffer<float>& buffer,
+		int64_t timeInSamples,
+		int64_t bufferPos,
+		int64_t length) const;
 
 	double getSampleRate() const;
 
