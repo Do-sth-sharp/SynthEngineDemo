@@ -1,7 +1,11 @@
 ﻿#include "EngineDemoEditor.h"
+#include "EditorStatusModel.h"
 
-EngineDemoEditor::EngineDemoEditor(juce::AudioProcessor& processor)
-	: AudioProcessorEditor(processor) {
+EngineDemoEditor::EngineDemoEditor(
+	juce::AudioProcessor& processor,
+	EditorStatusModel& model)
+	: AudioProcessorEditor(processor),
+	AudioProcessorEditorARAExtension(&processor), model(model) {
 	/** Info Editor */
 	this->infoEditor = std::make_unique<juce::TextEditor>();
 	this->infoEditor->setMultiLine(true);
@@ -12,6 +16,9 @@ EngineDemoEditor::EngineDemoEditor(juce::AudioProcessor& processor)
 		juce::LookAndFeel::getDefaultLookAndFeel().findColour(
 			juce::TextEditor::ColourIds::textColourId));
 	this->addAndMakeVisible(this->infoEditor.get());
+
+	/** Listener */
+	model.addChangeListener(this);
 
 	/** Min Size */
 	this->setResizable(true, false);
@@ -59,34 +66,34 @@ void EngineDemoEditor::paint(juce::Graphics& g) {
 		textLineAreaHeight = fontHeight * 1.5;
 	}
 
-	/** DMDA Status Area */
-	juce::Rectangle<int> DMDAStatusArea = textArea.withHeight(textLineAreaHeight);
+	/** ARA Status Area */
+	juce::Rectangle<int> ARAStatusArea = textArea.withHeight(textLineAreaHeight);
 	{
-		juce::String DMDAStatusStr = "DMDA Disconnected";
-		juce::Colour DMDAStatusColour = juce::Colours::red;
-		switch (this->handShaked){
-		case HandShakeStatus::Connected:
-			DMDAStatusStr = "DMDA Connected";
-			DMDAStatusColour = juce::Colours::green;
+		juce::String ARAStatusStr = "ARA Disconnected";
+		juce::Colour ARAStatusColour = juce::Colours::red;
+		switch (this->model.getARA()){
+		case EditorStatusModel::ARAStatus::Connected:
+			ARAStatusStr = "ARA Connected";
+			ARAStatusColour = juce::Colours::green;
 			break;
 		}
 
-		g.setColour(DMDAStatusColour);
+		g.setColour(ARAStatusColour);
 		g.drawFittedText(
-			DMDAStatusStr, DMDAStatusArea, juce::Justification::centred, 1, 0.5);
+			ARAStatusStr, ARAStatusArea, juce::Justification::centred, 1, 0.5);
 	}
 
 	/** Render Status Area */
 	juce::Rectangle<int> renderStatusArea
 		= textArea.withTrimmedTop(
-			DMDAStatusArea.getHeight()).withHeight(textLineAreaHeight);
+			ARAStatusArea.getHeight()).withHeight(textLineAreaHeight);
 	{
 		juce::String renderStatusStr = "Unrendered";
-		switch (this->rendered) {
-		case RenderStatus::Rendering:
+		switch (this->model.getRendered()) {
+		case EditorStatusModel::RenderStatus::Rendering:
 			renderStatusStr = "Rendering";
 			break;
-		case RenderStatus::Rendered:
+		case EditorStatusModel::RenderStatus::Rendered:
 			renderStatusStr = "Rendered";
 			break;
 		}
@@ -97,35 +104,14 @@ void EngineDemoEditor::paint(juce::Graphics& g) {
 	}
 }
 
-void EngineDemoEditor::setHandShaked(EngineDemoEditor::HandShakeStatus status) {
-	this->handShaked = status;
-	this->repaint();
-}
-
-void EngineDemoEditor::setRendered(EngineDemoEditor::RenderStatus status) {
-	this->rendered = status;
-	this->repaint();
-}
-
-void EngineDemoEditor::setMidiInfo(const EngineDemoEditor::MidiInfo& info) {
-	juce::String infoStr;
-
-	/** Generate Text */
-	auto& [trackNum, totalLength, totalEvents] = info;
-	infoStr += "Track Num: " + juce::String(trackNum) + "\n";
-	infoStr += "Total Length: " + juce::String(totalLength, 3) + "s\n";
-	infoStr += "Total Events: " + juce::String(totalEvents) + "\n";
-
+void EngineDemoEditor::changeListenerCallback(juce::ChangeBroadcaster* /*source*/) {
 	/** Set Text */
 	this->infoEditor->setReadOnly(false);
-	this->infoEditor->setText(infoStr);
+	this->infoEditor->setText(this->model.getContextInfo());
 	this->infoEditor->setReadOnly(true);
-}
 
-void EngineDemoEditor::clearMidiInfo() {
-	this->infoEditor->setReadOnly(false);
-	this->infoEditor->clear();
-	this->infoEditor->setReadOnly(true);
+	/** Repaint */
+	this->repaint();
 }
 
 const juce::Rectangle<int> EngineDemoEditor::getContentArea() const {

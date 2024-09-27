@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <JuceHeader.h>
+#include "EditorStatusModel.h"
 
 class EngineDemoProcessor final
 	: public juce::AudioProcessor,
@@ -35,5 +36,11 @@ public:
 	void setStateInformation(const void* data, int sizeInBytes) override;
 
 private:
+	EditorStatusModel statusModel;
+
+	void didBindToARA() noexcept override;
+
+	void updateARAStatus();
+
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EngineDemoProcessor)
 };

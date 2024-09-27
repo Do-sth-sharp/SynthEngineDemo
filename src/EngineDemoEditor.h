@@ -1,34 +1,26 @@
-#pragma once
+﻿#pragma once
 
 #include <JuceHeader.h>
 
-class EngineDemoEditor final : public juce::AudioProcessorEditor {
+class EditorStatusModel;
+
+class EngineDemoEditor final
+	: public juce::AudioProcessorEditor,
+	public juce::AudioProcessorEditorARAExtension,
+	private juce::ChangeListener {
 public:
-	explicit EngineDemoEditor(juce::AudioProcessor& processor);
+	explicit EngineDemoEditor(
+		juce::AudioProcessor& processor,
+		EditorStatusModel& model);
 
 	void resized() override;
 	void paint(juce::Graphics& g) override;
 
-	enum class HandShakeStatus {
-		Disconnected = 0,
-		Connected = 1
-	};
-	enum class RenderStatus {
-		Unrendered = 0,
-		Rendering = 1,
-		Rendered = 2
-	};
-	using MidiInfo = std::tuple<int, double, int>;
-
-	void setHandShaked(HandShakeStatus status);
-	void setRendered(RenderStatus status);
-	void setMidiInfo(const MidiInfo& info);
-	void clearMidiInfo();
-
 private:
+	EditorStatusModel& model;
 	std::unique_ptr<juce::TextEditor> infoEditor = nullptr;
-	HandShakeStatus handShaked = HandShakeStatus::Disconnected;
-	RenderStatus rendered = RenderStatus::Unrendered;
+
+	void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
 	const juce::Rectangle<int> getContentArea() const;
 

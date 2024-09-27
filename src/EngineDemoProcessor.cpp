@@ -97,7 +97,7 @@ bool EngineDemoProcessor::hasEditor() const {
 }
 
 juce::AudioProcessorEditor* EngineDemoProcessor::createEditor() {
-	return new EngineDemoEditor(*this);
+	return new EngineDemoEditor(*this, this->statusModel);
 }
 
 void EngineDemoProcessor::getStateInformation(juce::MemoryBlock& /*destData*/) {
@@ -105,6 +105,17 @@ void EngineDemoProcessor::getStateInformation(juce::MemoryBlock& /*destData*/) {
 
 void EngineDemoProcessor::setStateInformation(
 	const void* /*data*/, int /*sizeInBytes*/) {
+}
+
+void EngineDemoProcessor::didBindToARA() noexcept {
+	this->juce::AudioProcessorARAExtension::didBindToARA();
+	this->updateARAStatus();
+}
+
+void EngineDemoProcessor::updateARAStatus() {
+	this->statusModel.setARA((this->getPlaybackRenderer<ARAPlaybackRenderer>() != nullptr)
+		? EditorStatusModel::ARAStatus::Connected
+		: EditorStatusModel::ARAStatus::Disconnected);
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
