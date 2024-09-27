@@ -1,4 +1,4 @@
-#include "EngineDemoEditor.h"
+﻿#include "EngineDemoEditor.h"
 
 EngineDemoEditor::EngineDemoEditor(juce::AudioProcessor& processor)
 	: AudioProcessorEditor(processor) {
@@ -14,7 +14,8 @@ EngineDemoEditor::EngineDemoEditor(juce::AudioProcessor& processor)
 	this->addAndMakeVisible(this->infoEditor.get());
 
 	/** Min Size */
-	this->setResizeLimits(480, 270, INT_MAX, INT_MIN);
+	this->setResizable(true, false);
+	this->setResizeLimits(480, 270, INT_MAX, INT_MAX);
 	this->setSize(480, 270);
 }
 
@@ -128,12 +129,13 @@ void EngineDemoEditor::clearMidiInfo() {
 }
 
 const juce::Rectangle<int> EngineDemoEditor::getContentArea() const {
-	int width = this->getWidth(), height = this->getHeight();
+	/*int width = this->getWidth(), height = this->getHeight();
 	if (width > 2 * height) {
 		width = 2 * height;
 	}
 	else if (height > 2 * width) {
 		height = 2 * width;
 	}
-	return this->getLocalBounds().withSizeKeepingCentre(width, height);
+	return this->getLocalBounds().withSizeKeepingCentre(width, height);*/
+	return this->getLocalBounds();
 }
