@@ -55,6 +55,10 @@ void ARAContext::setSequenceData(
 
 	/** Clear Data */
 	this->regions.clear();
+	this->notes.clear();
+	this->pitchs.clear();
+	this->contextLength = 0;
+	if (!sequence) { return; }
 
 	/** Get Regions List */
 	auto& regions = sequence->getPlaybackRegions();

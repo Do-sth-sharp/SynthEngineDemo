@@ -32,7 +32,13 @@ bool ARADocumentController::doStoreObjectsToStream(
 }
 
 juce::ARAPlaybackRenderer* ARADocumentController::doCreatePlaybackRenderer() {
-	return new ARAPlaybackRenderer{ this->getDocumentController() };
+	auto renderer = new ARAPlaybackRenderer{ this->getDocumentController() };
+
+	if (auto document = this->getDocument()) {
+		document->addListener(renderer);
+	}
+
+	return renderer;
 }
 
 bool ARADocumentController::doIsPlaybackRegionContentAvailable(

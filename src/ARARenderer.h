@@ -4,10 +4,19 @@
 #include "ARAContext.h"
 #include "ARARenderThread.h"
 
-class ARAPlaybackRenderer final : public juce::ARAPlaybackRenderer {
+class ARAPlaybackRenderer final 
+	: public juce::ARAPlaybackRenderer,
+	public juce::ARADocumentListener {
 public:
 	ARAPlaybackRenderer(
 		ARA::PlugIn::DocumentController* dc);
+
+	void stopRender();
+	void startRender(juce::ARADocument* document);
+
+private:
+	void willBeginEditing(juce::ARADocument* document) override;
+	void didEndEditing(juce::ARADocument* document) override;
 
 public:
 	void prepareToPlay(double sampleRateIn,

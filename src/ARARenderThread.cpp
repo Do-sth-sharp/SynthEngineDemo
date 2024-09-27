@@ -7,7 +7,7 @@ ARARenderThread::ARARenderThread(const ARAContext& context)
 }
 
 ARARenderThread::~ARARenderThread() {
-	this->stopInternal();
+	this->stopSafety();
 }
 
 void ARARenderThread::setSampleRate(double sampleRate) {
@@ -15,7 +15,7 @@ void ARARenderThread::setSampleRate(double sampleRate) {
 
 	bool isRunning = this->isThreadRunning();
 	if (isRunning) {
-		this->stopInternal();
+		this->stopSafety();
 	}
 
 	this->renderer->prepare(sampleRate);
@@ -33,7 +33,7 @@ void ARARenderThread::releaseData() {
 	juce::GenericScopedLock locker(this->stateLock);
 
 	if (this->isThreadRunning()) {
-		this->stopInternal();
+		this->stopSafety();
 	}
 
 	this->renderer->releaseData();
@@ -47,18 +47,28 @@ void ARARenderThread::getAudioData(
 	this->renderer->getAudio(buffer, timeInSamples, bufferPos, length);
 }
 
+void ARARenderThread::stopSafety() {
+	juce::GenericScopedLock locker(this->stateLock);
+
+	if (this->isThreadRunning()) {
+		this->stopThread(30000);
+	}
+}
+
+void ARARenderThread::startSafety() {
+	juce::GenericScopedLock locker(this->stateLock);
+
+	if (this->isThreadRunning()) {
+		this->stopSafety();
+	}
+
+	this->startThread();
+}
+
 void ARARenderThread::run() {
 	/** Get Context */
 	auto [notes, pitchs, length] = this->context.getContextData();
 
 	/** Synth */
 	this->renderer->render(notes, pitchs, length);
-}
-
-void ARARenderThread::stopInternal() {
-	juce::GenericScopedLock locker(this->stateLock);
-
-	if (this->isThreadRunning()) {
-		this->stopThread(30000);
-	}
 }

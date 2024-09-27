@@ -4,7 +4,10 @@
 
 EngineDemoProcessor::EngineDemoProcessor()
 	: AudioProcessor(BusesProperties()
-		.withOutput("Output", juce::AudioChannelSet::mono(), true)) {}
+		.withInput("Mono Input", juce::AudioChannelSet::mono(), true)
+		.withInput("Stereo Input", juce::AudioChannelSet::stereo(), false)
+		.withOutput("Mono Output", juce::AudioChannelSet::mono(), true)
+		.withOutput("Stereo Output", juce::AudioChannelSet::stereo(), false)) {}
 
 EngineDemoProcessor::~EngineDemoProcessor() {}
 

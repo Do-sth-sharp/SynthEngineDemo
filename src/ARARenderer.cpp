@@ -7,6 +7,30 @@ ARAPlaybackRenderer::ARAPlaybackRenderer(
 	this->renderer = std::make_unique<ARARenderThread>(this->context);
 }
 
+void ARAPlaybackRenderer::stopRender() {
+	this->renderer->stopSafety();
+}
+
+void ARAPlaybackRenderer::startRender(juce::ARADocument* document) {
+	/** Get Sequence */
+	auto& sequences = document->getRegionSequences();
+
+	/** Update Context */
+	this->context.setSequenceData(
+		(sequences.size() > 0) ? sequences.front() : nullptr);
+
+	/** Render */
+	this->renderer->startSafety();
+}
+
+void ARAPlaybackRenderer::willBeginEditing(juce::ARADocument* /*document*/) {
+	this->stopRender();
+}
+
+void ARAPlaybackRenderer::didEndEditing(juce::ARADocument* document) {
+	this->startRender(document);
+}
+
 void ARAPlaybackRenderer::prepareToPlay(double sampleRateIn,
 	int /*maximumSamplesPerBlockIn*/,
 	int /*numChannelsIn*/,

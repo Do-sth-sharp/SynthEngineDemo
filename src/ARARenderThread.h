@@ -20,6 +20,9 @@ public:
 		int64_t bufferPos,
 		int64_t length) const;
 
+	void stopSafety();
+	void startSafety();
+
 private:
 	void run() override;
 
@@ -28,8 +31,6 @@ private:
 	std::unique_ptr<EngineRenderer> renderer = nullptr;
 
 	juce::CriticalSection stateLock;
-
-	void stopInternal();
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ARARenderThread)
 };
