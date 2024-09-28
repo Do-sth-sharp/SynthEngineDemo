@@ -7,7 +7,17 @@
 ARADocumentController::ARADocumentController(
 	const ARA::PlugIn::PlugInEntry* entry,
 	const ARA::ARADocumentControllerHostInstance* instance)
-	: ARADocumentControllerSpecialisation(entry, instance) {};
+	: ARADocumentControllerSpecialisation(entry, instance) {
+	this->renderer = std::make_unique<ARARenderThread>(this->context);
+}
+
+void ARADocumentController::willBeginEditing(juce::ARADocument* /*document*/) {
+	this->stopRender();
+}
+
+void ARADocumentController::didEndEditing(juce::ARADocument* document) {
+	this->startRender(document);
+}
 
 bool ARADocumentController::doRestoreObjectsFromStream(
 	juce::ARAInputStream& input,
@@ -32,13 +42,15 @@ bool ARADocumentController::doStoreObjectsToStream(
 }
 
 juce::ARAPlaybackRenderer* ARADocumentController::doCreatePlaybackRenderer() {
-	auto renderer = new ARAPlaybackRenderer{ this->getDocumentController() };
+	return new ARAPlaybackRenderer{
+		this->getDocumentController(),
+		this->context, *(this->renderer) };
+}
 
-	if (auto document = this->getDocument()) {
-		document->addListener(renderer);
-	}
-
-	return renderer;
+juce::ARAEditorRenderer* ARADocumentController::doCreateEditorRenderer() {
+	return new ARAEditorRenderer{
+		this->getDocumentController(),
+		this->context, *(this->renderer) };
 }
 
 bool ARADocumentController::doIsPlaybackRegionContentAvailable(
@@ -74,6 +86,22 @@ void ARADocumentController::doGetPlaybackRegionHeadAndTailTime(
 	ARA::ARATimeDuration* headTime, ARA::ARATimeDuration* tailTime) {
 	(*headTime) = playbackRegion->getStartInPlaybackTime();
 	(*tailTime) = playbackRegion->getEndInPlaybackTime();
+}
+
+void ARADocumentController::stopRender() {
+	this->renderer->stopSafety();
+}
+
+void ARADocumentController::startRender(juce::ARADocument* document) {
+	/** Get Sequence */
+	auto& sequences = document->getRegionSequences();
+
+	/** Update Context */
+	this->context.setSequenceData(
+		(sequences.size() > 0) ? sequences.front() : nullptr);
+
+	/** Render */
+	this->renderer->startSafety();
 }
 
 const ARA::ARAFactory* JUCE_CALLTYPE createARAFactory() {

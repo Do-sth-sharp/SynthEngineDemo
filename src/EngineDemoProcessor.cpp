@@ -57,6 +57,12 @@ void EngineDemoProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) 
 			this->getChannelCountOfBus(true, 0), ProcessingPrecision::singlePrecision,
 			juce::ARARenderer::AlwaysNonRealtime::no);
 	}
+	/** ARA Editor Renderer */
+	else if (auto editorRenderer = this->getEditorRenderer<ARAEditorRenderer>()) {
+		editorRenderer->prepareToPlay(sampleRate, samplesPerBlock,
+			this->getChannelCountOfBus(true, 0), ProcessingPrecision::singlePrecision,
+			juce::ARARenderer::AlwaysNonRealtime::no);
+	}
 
 	/** TODO Prepare Normal Synth */
 }
@@ -66,14 +72,18 @@ void EngineDemoProcessor::releaseResources() {
 	if (auto playbackRenderer = this->getPlaybackRenderer<ARAPlaybackRenderer>()) {
 		playbackRenderer->releaseResources();
 	}
+	/** ARA Editor Renderer */
+	else if (auto editorRenderer = this->getEditorRenderer<ARAEditorRenderer>()) {
+		editorRenderer->releaseResources();
+	}
 }
 
 bool EngineDemoProcessor::isBusesLayoutSupported(
 	const juce::AudioProcessor::BusesLayout& layouts) const {
-	if (layouts.getMainInputChannelSet().size() != 0) {
+	if (layouts.getMainInputChannelSet().size() > 2) {
 		return false;
 	}
-	if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()) {
+	if (layouts.getMainOutputChannelSet().size()  > 2) {
 		return false;
 	}
 	return true;
@@ -84,6 +94,13 @@ void EngineDemoProcessor::processBlock(
 	/** ARA Playback Renderer */
 	if (auto playbackRenderer = this->getPlaybackRenderer<ARAPlaybackRenderer>()) {
 		if (playbackRenderer->processBlock(buffer, Realtime::yes,
+			this->getPlayHead()->getPosition().orFallback(juce::AudioPlayHead::PositionInfo{}))) {
+			return;
+		}
+	}
+	/** ARA Editor Renderer */
+	else if (auto editorRenderer = this->getEditorRenderer<ARAEditorRenderer>()) {
+		if (editorRenderer->processBlock(buffer, Realtime::yes,
 			this->getPlayHead()->getPosition().orFallback(juce::AudioPlayHead::PositionInfo{}))) {
 			return;
 		}
@@ -113,7 +130,10 @@ void EngineDemoProcessor::didBindToARA() noexcept {
 }
 
 void EngineDemoProcessor::updateARAStatus() {
-	this->statusModel.setARA((this->getPlaybackRenderer<ARAPlaybackRenderer>() != nullptr)
+	bool hasPlaybackRenderer = (this->getPlaybackRenderer<ARAPlaybackRenderer>() != nullptr);
+	bool hasEditorRenderer = (this->getEditorRenderer<ARAEditorRenderer>() != nullptr);
+
+	this->statusModel.setARA((hasPlaybackRenderer || hasEditorRenderer)
 		? EditorStatusModel::ARAStatus::Connected
 		: EditorStatusModel::ARAStatus::Disconnected);
 }
