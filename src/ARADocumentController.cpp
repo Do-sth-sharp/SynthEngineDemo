@@ -2,21 +2,19 @@
 #include "ARAArchieveIO.h"
 #include "ARARenderer.h"
 #include "ARAContextReader.h"
+#include "ARADocument.h"
 #include <ARASharedObject.h>
 
-ARADocumentController::ARADocumentController(
-	const ARA::PlugIn::PlugInEntry* entry,
-	const ARA::ARADocumentControllerHostInstance* instance)
-	: ARADocumentControllerSpecialisation(entry, instance) {
-	this->renderer = std::make_unique<ARARenderThread>(this->context);
-}
-
-void ARADocumentController::willBeginEditing(juce::ARADocument* /*document*/) {
-	this->stopRender();
+void ARADocumentController::willBeginEditing(juce::ARADocument* document) {
+	if (auto ptr = dynamic_cast<ARADocument*>(document)) {
+		ptr->stopRender();
+	}
 }
 
 void ARADocumentController::didEndEditing(juce::ARADocument* document) {
-	this->startRender(document);
+	if (auto ptr = dynamic_cast<ARADocument*>(document)) {
+		ptr->startRender();
+	}
 }
 
 bool ARADocumentController::doRestoreObjectsFromStream(
@@ -41,16 +39,18 @@ bool ARADocumentController::doStoreObjectsToStream(
 	return writer.write(output);
 }
 
+juce::ARADocument* ARADocumentController::doCreateDocument() {
+	return new ARADocument{ this->getDocumentController() };
+}
+
 juce::ARAPlaybackRenderer* ARADocumentController::doCreatePlaybackRenderer() {
 	return new ARAPlaybackRenderer{
-		this->getDocumentController(),
-		this->context, *(this->renderer) };
+		this->getDocumentController() };
 }
 
 juce::ARAEditorRenderer* ARADocumentController::doCreateEditorRenderer() {
 	return new ARAEditorRenderer{
-		this->getDocumentController(),
-		this->context, *(this->renderer) };
+		this->getDocumentController() };
 }
 
 bool ARADocumentController::doIsPlaybackRegionContentAvailable(
@@ -86,22 +86,6 @@ void ARADocumentController::doGetPlaybackRegionHeadAndTailTime(
 	ARA::ARATimeDuration* headTime, ARA::ARATimeDuration* tailTime) {
 	(*headTime) = playbackRegion->getStartInPlaybackTime();
 	(*tailTime) = playbackRegion->getEndInPlaybackTime();
-}
-
-void ARADocumentController::stopRender() {
-	this->renderer->stopSafety();
-}
-
-void ARADocumentController::startRender(juce::ARADocument* document) {
-	/** Get Sequence */
-	auto& sequences = document->getRegionSequences();
-
-	/** Update Context */
-	this->context.setSequenceData(
-		(sequences.size() > 0) ? sequences.front() : nullptr);
-
-	/** Render */
-	this->renderer->startSafety();
 }
 
 const ARA::ARAFactory* JUCE_CALLTYPE createARAFactory() {

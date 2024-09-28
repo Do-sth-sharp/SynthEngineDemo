@@ -37,6 +37,7 @@ public:
 
 private:
 	EditorStatusModel statusModel;
+	std::unique_ptr<juce::ChangeListener> renderStateListener = nullptr;
 
 	void didBindToARA() noexcept override;
 

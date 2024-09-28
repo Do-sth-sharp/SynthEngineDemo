@@ -23,6 +23,8 @@ void ARARenderThread::setSampleRate(double sampleRate) {
 	if (isRunning) {
 		this->startThread();
 	}
+
+	this->sendChangeMessage();
 }
 
 double ARARenderThread::getSampleRate() const {
@@ -37,6 +39,8 @@ void ARARenderThread::releaseData() {
 	}
 
 	this->renderer->releaseData();
+
+	this->sendChangeMessage();
 }
 
 void ARARenderThread::getAudioData(
@@ -65,10 +69,26 @@ void ARARenderThread::startSafety() {
 	this->startThread();
 }
 
+bool ARARenderThread::getRunningFlag() const {
+	return this->runningFlag;
+}
+
+bool ARARenderThread::getRendered() const {
+	return this->renderer->isRendered();
+}
+
 void ARARenderThread::run() {
+	/** State Changed */
+	this->runningFlag = true;
+	this->sendChangeMessage();
+
 	/** Get Context */
 	auto [notes, pitchs, length] = this->context.getContextData();
 
 	/** Synth */
 	this->renderer->render(notes, pitchs, length);
+
+	/** State Changed */
+	this->runningFlag = false;
+	this->sendChangeMessage();
 }

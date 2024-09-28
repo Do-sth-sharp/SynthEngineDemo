@@ -8,10 +8,7 @@ class ARARenderThread;
 class ARAPlaybackRenderer final 
 	: public juce::ARAPlaybackRenderer {
 public:
-	ARAPlaybackRenderer(
-		ARA::PlugIn::DocumentController* dc,
-		const ARAContext& context,
-		ARARenderThread& renderer);
+	using juce::ARAPlaybackRenderer::ARAPlaybackRenderer;
 
 public:
 	void prepareToPlay(double sampleRateIn,
@@ -25,19 +22,13 @@ public:
 		const juce::AudioPlayHead::PositionInfo& positionInfo) noexcept override;
 
 private:
-	const ARAContext& context;
-	ARARenderThread& renderer;
-
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ARAPlaybackRenderer)
 };
 
 class ARAEditorRenderer final
 	: public juce::ARAEditorRenderer {
 public:
-	ARAEditorRenderer(
-		ARA::PlugIn::DocumentController* dc,
-		const ARAContext& context,
-		ARARenderThread& renderer);
+	using juce::ARAEditorRenderer::ARAEditorRenderer;
 
 public:
 	void prepareToPlay(double sampleRateIn,
@@ -51,8 +42,5 @@ public:
 		const juce::AudioPlayHead::PositionInfo& positionInfo) noexcept override;
 
 private:
-	const ARAContext& context;
-	ARARenderThread& renderer;
-
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ARAEditorRenderer)
 };

@@ -1,13 +1,44 @@
 ﻿#include "EngineDemoProcessor.h"
 #include "EngineDemoEditor.h"
 #include "ARARenderer.h"
+#include "ARARenderThread.h"
+#include "ARADocument.h"
+
+class RenderStateListener final : public juce::ChangeListener {
+public:
+	RenderStateListener() = delete;
+	RenderStateListener(EditorStatusModel& model)
+		: model(model) {};
+
+private:
+	void changeListenerCallback(juce::ChangeBroadcaster* source) override {
+		if (auto renderer = dynamic_cast<ARARenderThread*>(source)) {
+			if (renderer->getRunningFlag()) {
+				this->model.setRendered(EditorStatusModel::RenderStatus::Rendering);
+			}
+			else {
+				this->model.setRendered(
+					renderer->getRendered()
+					? EditorStatusModel::RenderStatus::Rendered
+					: EditorStatusModel::RenderStatus::Unrendered);
+			}
+		}
+	}
+
+private:
+	EditorStatusModel& model;
+
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RenderStateListener)
+};
 
 EngineDemoProcessor::EngineDemoProcessor()
 	: AudioProcessor(BusesProperties()
 		.withInput("Mono Input", juce::AudioChannelSet::mono(), true)
 		.withInput("Stereo Input", juce::AudioChannelSet::stereo(), false)
 		.withOutput("Mono Output", juce::AudioChannelSet::mono(), true)
-		.withOutput("Stereo Output", juce::AudioChannelSet::stereo(), false)) {}
+		.withOutput("Stereo Output", juce::AudioChannelSet::stereo(), false)) {
+	this->renderStateListener = std::make_unique<RenderStateListener>(this->statusModel);
+}
 
 EngineDemoProcessor::~EngineDemoProcessor() {}
 
@@ -127,6 +158,10 @@ void EngineDemoProcessor::setStateInformation(
 void EngineDemoProcessor::didBindToARA() noexcept {
 	this->juce::AudioProcessorARAExtension::didBindToARA();
 	this->updateARAStatus();
+
+	if (auto document = dynamic_cast<ARADocument*>(this->getDocumentController()->getDocument())) {
+		document->addRenderStateListener(this->renderStateListener.get());
+	}
 }
 
 void EngineDemoProcessor::updateARAStatus() {

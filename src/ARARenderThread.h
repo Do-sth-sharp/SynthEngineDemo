@@ -4,7 +4,9 @@
 #include "ARAContext.h"
 #include "EngineRenderer.h"
 
-class ARARenderThread final : public juce::Thread {
+class ARARenderThread final
+	: public juce::Thread,
+	public juce::ChangeBroadcaster {
 public:
 	ARARenderThread(const ARAContext& context);
 	~ARARenderThread();
@@ -23,6 +25,9 @@ public:
 	void stopSafety();
 	void startSafety();
 
+	bool getRunningFlag() const;
+	bool getRendered() const;
+
 private:
 	void run() override;
 
@@ -31,6 +36,8 @@ private:
 	std::unique_ptr<EngineRenderer> renderer = nullptr;
 
 	juce::CriticalSection stateLock;
+
+	std::atomic_bool runningFlag = false;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ARARenderThread)
 };
