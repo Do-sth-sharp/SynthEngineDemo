@@ -13,11 +13,26 @@ void EditorStatusModel::setRendered(RenderStatus status) {
 void EditorStatusModel::setContextInfo(const ContextInfo& info) {
 	this->infoStr.clear();
 
-	/** Generate Text */
-	auto& [trackNum, totalLength, totalEvents] = info;
-	this->infoStr += "Track Num: " + juce::String(trackNum) + "\n";
-	this->infoStr += "Total Length: " + juce::String(totalLength, 3) + "s\n";
-	this->infoStr += "Total Events: " + juce::String(totalEvents) + "\n";
+	/** Regions */
+	this->infoStr += "Region Num: " + juce::String{ info.regions.size() } + "\n";
+	this->infoStr += "Region List: \n";
+	for (auto [startTime, endTime] : info.regions) {
+		this->infoStr += "    " + juce::String{ startTime, 2 } + " - " + juce::String{ endTime, 2 } + "\n";
+	}
+	this->infoStr += "\n";
+
+	/** Context */
+	this->infoStr += "Context Length: " + juce::String{ info.contextLength } + "\n";
+	this->infoStr += "Note Num: " + juce::String{ info.noteNum } + "\n";
+	this->infoStr += "Pitch Num: " + juce::String{ info.pitchNum } + "\n";
+	this->infoStr += "\n";
+
+	/** Playback */
+	this->infoStr += "Sample Rate: " + juce::String{ info.sampleRate, 0 } + "\n";
+	this->infoStr += "Block Size: " + juce::String{ info.blockSize } + "\n";
+	this->infoStr += "Input Channel Num: " + juce::String{ info.channelNumInput } + "\n";
+	this->infoStr += "Output Channel Num: " + juce::String{ info.channelNumOutput } + "\n";
+	this->infoStr += "\n";
 }
 
 void EditorStatusModel::clearContextInfo() {

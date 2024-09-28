@@ -16,7 +16,20 @@ public:
 		Rendering = 1,
 		Rendered = 2
 	};
-	using ContextInfo = std::tuple<int, double, int>;
+
+	struct ContextInfo {
+		using TimeRange = std::tuple<double, double>;
+		juce::Array<TimeRange> regions;
+
+		double contextLength;
+		int noteNum;
+		int pitchNum;
+
+		double sampleRate;
+		int blockSize;
+		int channelNumInput;
+		int channelNumOutput;
+	};
 
 	void setARA(ARAStatus status);
 	void setRendered(RenderStatus status);
