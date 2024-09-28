@@ -9,9 +9,8 @@ public:
 
 	using NoteList = juce::Array<ARA::ARAContentNote>;
 	using PitchList = juce::Array<ARAExtension::ARAContentIntParam>;
-	void setContextData(
-		ARA::PlugIn::ContentReader* noteReader,
-		ARA::PlugIn::ContentReader* pitchReader);
+	using ContentReaderPtr = std::unique_ptr<ARA::PlugIn::ContentReader, std::function<void(ARA::PlugIn::ContentReader*)>>;
+	void setContextData(ContentReaderPtr noteReader, ContentReaderPtr pitchReader);
 	const std::tuple<NoteList, PitchList, double> getContextData() const;
 	double getContextLength() const;
 

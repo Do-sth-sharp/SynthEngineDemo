@@ -1,8 +1,6 @@
 ﻿#include "ARAContext.h"
 
-void ARAContext::setContextData(
-	ARA::PlugIn::ContentReader* noteReader,
-	ARA::PlugIn::ContentReader* pitchReader) {
+void ARAContext::setContextData(ContentReaderPtr noteReader, ContentReaderPtr pitchReader) {
 	/** Lock Context */
 	juce::ScopedWriteLock locker(this->contextLock);
 
@@ -71,16 +69,24 @@ void ARAContext::setSequenceData(
 			});
 	}
 
-	/** Create Context Reader */
-	auto noteReader = (regions.size() > 0)
-		? sequence->getDocumentController()->createPlaybackRegionContentReader(
-			ARA::PlugIn::toRef(regions.at(0)), ARAExtension::ARAContentTypeNote, nullptr) : nullptr;
-	auto pitchReader = (regions.size() > 0)
-		? sequence->getDocumentController()->createPlaybackRegionContentReader(
-			ARA::PlugIn::toRef(regions.at(0)), ARAExtension::ARAContentTypePitchWheel, nullptr) : nullptr;
-	this->setContextData(
-		ARA::PlugIn::fromRef(noteReader),
-		ARA::PlugIn::fromRef(pitchReader));
+	/**
+	 * Create Context Reader.
+	 * SHIT CODE! Blame to JUCE and ARA SDK.
+	 */
+	auto readerDeleter = [sequence](ARA::PlugIn::ContentReader* ptr) {
+		sequence->getDocumentController()->destroyContentReader(ARA::PlugIn::toRef(ptr));
+		};
+	auto noteReader = ContentReaderPtr(
+		ARA::PlugIn::fromRef((regions.size() > 0)
+			? sequence->getDocumentController()->createPlaybackRegionContentReader(
+				ARA::PlugIn::toRef(regions.at(0)), ARAExtension::ARAContentTypeNote, nullptr) : nullptr), readerDeleter);
+	auto pitchReader = ContentReaderPtr(
+		ARA::PlugIn::fromRef((regions.size() > 0)
+			? sequence->getDocumentController()->createPlaybackRegionContentReader(
+				ARA::PlugIn::toRef(regions.at(0)), ARAExtension::ARAContentTypePitchWheel, nullptr) : nullptr), readerDeleter);
+
+	/** Read Context Data */
+	this->setContextData(std::move(noteReader), std::move(pitchReader));
 }
 
 const ARAContext::TimeRangeList ARAContext::doMapTime(double startTime, double length) const {
