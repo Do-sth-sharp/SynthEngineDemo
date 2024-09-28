@@ -1,4 +1,4 @@
-#include "KarPlusStrong.h"
+﻿#include "KarPlusStrong.h"
 
 #include <random>
 
@@ -24,6 +24,10 @@ KarPlusStrong::KarPlusStrong(int seed, KarPlusStrong::Device device) {
 		this->noiseSource.getReference(i) = randomDistribution(randomEngine);
 	}
 
+	/** Prepare Temp */
+	this->temp0.resize(KPSNoiseLength);
+	this->temp1.resize(KPSNoiseLength);
+
 	/** Set Device */
 	switch (device) {
 	case KarPlusStrong::Device::AVX512:
@@ -32,12 +36,14 @@ KarPlusStrong::KarPlusStrong(int seed, KarPlusStrong::Device device) {
 			this->copyClipFunc = KarPlusStrong::copyClipAVX512;
 			break;
 		}
+		[[fallthrough]];
 	case KarPlusStrong::Device::AVX2:
 		if (juce::SystemStats::hasAVX2()) {
 			this->prepareNextClipFunc = KarPlusStrong::prepareNextClipAVX2;
 			this->copyClipFunc = KarPlusStrong::copyClipAVX2;
 			break;
 		}
+		[[fallthrough]];
 	case KarPlusStrong::Device::SSE3:
 		if (juce::SystemStats::hasSSE3()) {
 			this->prepareNextClipFunc = KarPlusStrong::prepareNextClipSSE3;
@@ -55,11 +61,6 @@ bool KarPlusStrong::synth(juce::AudioBuffer<float>& buffer, double sampleRate,
 	if (static_cast<int64_t>(startSample) + length >= buffer.getNumSamples()) { 
 		return false;
 	}
-
-	/** Prepare Temp */
-	juce::Array<float> temp0, temp1;
-	temp0.resize(this->noiseSource.size());
-	temp1.resize(this->noiseSource.size());
 
 	/** Synth */
 	double currentFreq = 440;

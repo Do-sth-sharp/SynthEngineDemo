@@ -24,6 +24,9 @@ void ARAPlaybackRenderer::releaseResources() {
 bool ARAPlaybackRenderer::processBlock(juce::AudioBuffer<float>& buffer,
 	juce::AudioProcessor::Realtime /*realtime*/,
 	const juce::AudioPlayHead::PositionInfo& positionInfo) noexcept {
+	/** Check Playing */
+	if (!positionInfo.getIsPlaying()) { return true; }
+
 	/** Get Region List */
 	double sampleRate = this->renderer.getSampleRate();
 	double startTime = positionInfo.getTimeInSeconds().orFallback(0);
@@ -63,6 +66,9 @@ void ARAEditorRenderer::releaseResources() {
 bool ARAEditorRenderer::processBlock(juce::AudioBuffer<float>& buffer,
 	juce::AudioProcessor::Realtime /*realtime*/,
 	const juce::AudioPlayHead::PositionInfo& positionInfo) noexcept {
+	/** Check Playing */
+	if (!positionInfo.getIsPlaying()) { return true; }
+
 	/** Get Region List */
 	double sampleRate = this->renderer.getSampleRate();
 	double startTime = positionInfo.getTimeInSeconds().orFallback(0);

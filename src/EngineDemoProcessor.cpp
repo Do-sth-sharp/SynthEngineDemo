@@ -83,7 +83,7 @@ bool EngineDemoProcessor::isBusesLayoutSupported(
 	if (layouts.getMainInputChannelSet().size() > 2) {
 		return false;
 	}
-	if (layouts.getMainOutputChannelSet().size()  > 2) {
+	if (layouts.getMainOutputChannelSet().size() > 2) {
 		return false;
 	}
 	return true;

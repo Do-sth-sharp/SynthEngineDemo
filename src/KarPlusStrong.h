@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <JuceHeader.h>
 
@@ -54,6 +54,7 @@ private:
 	PrepareNextClipFuncType prepareNextClipFunc = prepareNextClip;
 	CopyClipFuncType copyClipFunc = copyClip;
 
+	mutable juce::Array<float> temp0, temp1;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KarPlusStrong)
 };
