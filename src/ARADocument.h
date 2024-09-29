@@ -17,6 +17,7 @@ public:
 private:
 	friend class ARAPlaybackRenderer;
 	friend class ARAEditorRenderer;
+	friend class EngineDemoProcessor;
 	ARAContext& getContext();
 	ARARenderThread& getRenderer();
 

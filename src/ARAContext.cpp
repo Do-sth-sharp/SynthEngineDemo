@@ -118,3 +118,15 @@ const ARAContext::TimeRangeList ARAContext::doMapTimeRealTime(double startTime, 
 	/** Get List */
 	return this->doMapTime(startTime, length);
 }
+
+const ARAContext::TimeRangeList ARAContext::getRegionList() const {
+	juce::ScopedReadLock locker(this->contextLock);
+
+	TimeRangeList result;
+
+	for (auto& region : this->regions) {
+		result.add({ region.startInSeq, region.startInContext, region.endInSeq - region.startInSeq });
+	}
+
+	return result;
+}

@@ -31,6 +31,30 @@ private:
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RenderStateListener)
 };
 
+class ContextInfoListener final : public juce::ARADocumentListener {
+public:
+	ContextInfoListener() = delete;
+	ContextInfoListener(EngineDemoProcessor& processor)
+		: processor(processor) {};
+
+private:
+	void didEndEditing(juce::ARADocument* document) override {
+		this->updateDocument(document);
+	}
+	void willDestroyDocument(juce::ARADocument* document) override {
+		this->updateDocument(document);
+	}
+
+private:
+	EngineDemoProcessor& processor;
+
+	void updateDocument(juce::ARADocument* /*document*/) {
+		this->processor.updateContextInfo();
+	}
+
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ContextInfoListener)
+};
+
 EngineDemoProcessor::EngineDemoProcessor()
 	: AudioProcessor(BusesProperties()
 		.withInput("Mono Input", juce::AudioChannelSet::mono(), true)
@@ -38,6 +62,10 @@ EngineDemoProcessor::EngineDemoProcessor()
 		.withOutput("Mono Output", juce::AudioChannelSet::mono(), true)
 		.withOutput("Stereo Output", juce::AudioChannelSet::stereo(), false)) {
 	this->renderStateListener = std::make_unique<RenderStateListener>(this->statusModel);
+	this->contextInfoListener = std::make_unique<ContextInfoListener>(*this);
+
+	/** Update Info */
+	this->updateContextInfo();
 }
 
 EngineDemoProcessor::~EngineDemoProcessor() {}
@@ -95,6 +123,9 @@ void EngineDemoProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) 
 			juce::ARARenderer::AlwaysNonRealtime::no);
 	}
 
+	/** Update Info */
+	this->updateContextInfo();
+
 	/** TODO Prepare Normal Synth */
 }
 
@@ -107,6 +138,9 @@ void EngineDemoProcessor::releaseResources() {
 	else if (auto editorRenderer = this->getEditorRenderer<ARAEditorRenderer>()) {
 		editorRenderer->releaseResources();
 	}
+
+	/** Update Info */
+	this->updateContextInfo();
 }
 
 bool EngineDemoProcessor::isBusesLayoutSupported(
@@ -155,12 +189,18 @@ void EngineDemoProcessor::setStateInformation(
 	const void* /*data*/, int /*sizeInBytes*/) {
 }
 
+void EngineDemoProcessor::numChannelsChanged() {
+	/** Update Info */
+	this->updateContextInfo();
+}
+
 void EngineDemoProcessor::didBindToARA() noexcept {
 	this->juce::AudioProcessorARAExtension::didBindToARA();
 	this->updateARAStatus();
 
 	if (auto document = dynamic_cast<ARADocument*>(this->getDocumentController()->getDocument())) {
 		document->addRenderStateListener(this->renderStateListener.get());
+		document->addListener(this->contextInfoListener.get());
 	}
 }
 
@@ -171,6 +211,34 @@ void EngineDemoProcessor::updateARAStatus() {
 	this->statusModel.setARA((hasPlaybackRenderer || hasEditorRenderer)
 		? EditorStatusModel::ARAStatus::Connected
 		: EditorStatusModel::ARAStatus::Disconnected);
+}
+
+void EngineDemoProcessor::updateContextInfo() {
+	EditorStatusModel::ContextInfo info{};
+
+	if (auto dc = this->getDocumentController()) {
+		if (auto document = dynamic_cast<ARADocument*>(dc->getDocument())) {
+			auto& context = document->getContext();
+
+			/** Regions */
+			info.regions = context.getRegionList();
+
+			/** Context */
+			auto [notes, pitchs, length] = context.getContextData();
+			info.noteNum = notes.size();
+			info.pitchNum = pitchs.size();
+			info.contextLength = length;
+		}
+	}
+
+	/** Engine State */
+	info.sampleRate = this->getSampleRate();
+	info.blockSize = this->getBlockSize();
+	info.channelNumInput = this->getChannelCountOfBus(true, 0);
+	info.channelNumOutput = this->getChannelCountOfBus(false, 0);
+
+	/** Set Info */
+	this->statusModel.setContextInfo(info);
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {

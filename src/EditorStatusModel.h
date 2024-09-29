@@ -18,8 +18,9 @@ public:
 	};
 
 	struct ContextInfo {
-		using TimeRange = std::tuple<double, double>;
-		juce::Array<TimeRange> regions;
+		/** StartTimeInSequence, StartTimeInContext, Length */
+		using TimeRangeMap = std::tuple<double, double, double>;
+		juce::Array<TimeRangeMap> regions;
 
 		double contextLength;
 		int noteNum;

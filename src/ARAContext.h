@@ -23,6 +23,8 @@ public:
 	const TimeRangeList doMapTime(double startTime, double length) const;
 	const TimeRangeList doMapTimeRealTime(double startTime, double length) const;
 
+	const TimeRangeList getRegionList() const;
+
 private:
 	mutable juce::ReadWriteLock contextLock;
 	NoteList notes;

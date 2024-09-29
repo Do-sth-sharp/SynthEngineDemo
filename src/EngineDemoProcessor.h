@@ -35,13 +35,18 @@ public:
 	void getStateInformation(juce::MemoryBlock& destData) override;
 	void setStateInformation(const void* data, int sizeInBytes) override;
 
+	void numChannelsChanged() override;
+
 private:
 	EditorStatusModel statusModel;
 	std::unique_ptr<juce::ChangeListener> renderStateListener = nullptr;
+	std::unique_ptr<juce::ARADocumentListener> contextInfoListener = nullptr;
 
 	void didBindToARA() noexcept override;
 
+	friend class ContextInfoListener;
 	void updateARAStatus();
+	void updateContextInfo();
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EngineDemoProcessor)
 };

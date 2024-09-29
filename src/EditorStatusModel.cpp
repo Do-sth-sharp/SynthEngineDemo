@@ -16,8 +16,9 @@ void EditorStatusModel::setContextInfo(const ContextInfo& info) {
 	/** Regions */
 	this->infoStr += "Region Num: " + juce::String{ info.regions.size() } + "\n";
 	this->infoStr += "Region List: \n";
-	for (auto [startTime, endTime] : info.regions) {
-		this->infoStr += "    " + juce::String{ startTime, 2 } + " - " + juce::String{ endTime, 2 } + "\n";
+	for (auto [seqStartTime, contextStartTime, length] : info.regions) {
+		this->infoStr += "    (" + juce::String{ seqStartTime, 2 } + ", " + juce::String{ seqStartTime + length, 2 }
+			+ ") - (" + juce::String{ contextStartTime, 2 } + ", " + juce::String{ contextStartTime + length, 2 } + ")\n";
 	}
 	this->infoStr += "\n";
 
@@ -33,10 +34,13 @@ void EditorStatusModel::setContextInfo(const ContextInfo& info) {
 	this->infoStr += "Input Channel Num: " + juce::String{ info.channelNumInput } + "\n";
 	this->infoStr += "Output Channel Num: " + juce::String{ info.channelNumOutput } + "\n";
 	this->infoStr += "\n";
+
+	this->sendChangeMessage();
 }
 
 void EditorStatusModel::clearContextInfo() {
 	this->infoStr.clear();
+	this->sendChangeMessage();
 }
 
 EditorStatusModel::ARAStatus EditorStatusModel::getARA() const {
