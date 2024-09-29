@@ -9,17 +9,17 @@ EngineDemoEditor::EngineDemoEditor(
 	/** Info Editor */
 	this->infoEditor = std::make_unique<juce::TextEditor>();
 	this->infoEditor->setMultiLine(true);
+	this->infoEditor->setReadOnly(true);
 	this->infoEditor->setWantsKeyboardFocus(false);
 	this->infoEditor->setTabKeyUsedAsCharacter(true);
 	this->infoEditor->setTextToShowWhenEmpty("No Info",
 		juce::LookAndFeel::getDefaultLookAndFeel().findColour(
 			juce::TextEditor::ColourIds::textColourId));
-	this->infoEditor->setText(this->model.getContextInfo());
-	this->infoEditor->setReadOnly(true);
 	this->addAndMakeVisible(this->infoEditor.get());
 
 	/** Listener */
 	model.addChangeListener(this);
+	model.sendChangeMessage();
 
 	/** Min Size */
 	this->setResizable(true, false);
