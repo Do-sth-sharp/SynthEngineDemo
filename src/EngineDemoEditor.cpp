@@ -88,7 +88,7 @@ void EngineDemoEditor::paint(juce::Graphics& g) {
 	juce::Rectangle<int> renderStatusArea
 		= textArea.withTrimmedTop(
 			ARAStatusArea.getHeight()).withHeight(textLineAreaHeight);
-	{
+	if (this->model.getARA() == EditorStatusModel::ARAStatus::Connected) {
 		juce::String renderStatusStr = "Unrendered";
 		switch (this->model.getRendered()) {
 		case EditorStatusModel::RenderStatus::Rendering:

@@ -13,20 +13,22 @@ void EditorStatusModel::setRendered(RenderStatus status) {
 void EditorStatusModel::setContextInfo(const ContextInfo& info) {
 	this->infoStr.clear();
 
-	/** Regions */
-	this->infoStr += "Region Num: " + juce::String{ info.regions.size() } + "\n";
-	this->infoStr += "Region List: \n";
-	for (auto [seqStartTime, contextStartTime, length] : info.regions) {
-		this->infoStr += "    (" + juce::String{ seqStartTime, 2 } + ", " + juce::String{ seqStartTime + length, 2 }
+	if (info.araState) {
+		/** Regions */
+		this->infoStr += "Region Num: " + juce::String{ info.regions.size() } + "\n";
+		this->infoStr += "Region List: \n";
+		for (auto [seqStartTime, contextStartTime, length] : info.regions) {
+			this->infoStr += "    (" + juce::String{ seqStartTime, 2 } + ", " + juce::String{ seqStartTime + length, 2 }
 			+ ") - (" + juce::String{ contextStartTime, 2 } + ", " + juce::String{ contextStartTime + length, 2 } + ")\n";
-	}
-	this->infoStr += "\n";
+		}
+		this->infoStr += "\n";
 
-	/** Context */
-	this->infoStr += "Context Length: " + juce::String{ info.contextLength } + "\n";
-	this->infoStr += "Note Num: " + juce::String{ info.noteNum } + "\n";
-	this->infoStr += "Pitch Num: " + juce::String{ info.pitchNum } + "\n";
-	this->infoStr += "\n";
+		/** Context */
+		this->infoStr += "Context Length: " + juce::String{ info.contextLength } + "\n";
+		this->infoStr += "Note Num: " + juce::String{ info.noteNum } + "\n";
+		this->infoStr += "Pitch Num: " + juce::String{ info.pitchNum } + "\n";
+		this->infoStr += "\n";
+	}
 
 	/** Playback */
 	this->infoStr += "Sample Rate: " + juce::String{ info.sampleRate, 0 } + "\n";

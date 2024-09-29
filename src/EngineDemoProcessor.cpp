@@ -221,9 +221,11 @@ void EngineDemoProcessor::updateARAStatus() {
 void EngineDemoProcessor::updateContextInfo() {
 	EditorStatusModel::ContextInfo info{};
 
+	info.araState = false;
 	if (auto dc = this->getDocumentController()) {
 		if (auto document = dynamic_cast<ARADocument*>(dc->getDocument())) {
 			auto& context = document->getContext();
+			info.araState = true;
 
 			/** Regions */
 			info.regions = context.getRegionList();

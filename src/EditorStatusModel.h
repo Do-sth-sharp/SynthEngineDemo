@@ -30,6 +30,8 @@ public:
 		int blockSize;
 		int channelNumInput;
 		int channelNumOutput;
+
+		bool araState;
 	};
 
 	void setARA(ARAStatus status);
