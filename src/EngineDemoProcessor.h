@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "EditorStatusModel.h"
+#include "RealTimeRenderer.h"
 
 class EngineDemoProcessor final
 	: public juce::AudioProcessor,
@@ -41,6 +42,8 @@ private:
 	EditorStatusModel statusModel;
 	std::unique_ptr<juce::ChangeListener> renderStateListener = nullptr;
 	std::unique_ptr<juce::ARADocumentListener> contextInfoListener = nullptr;
+
+	RealTimeRenderer renderer;
 
 	void didBindToARA() noexcept override;
 

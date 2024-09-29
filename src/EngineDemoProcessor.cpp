@@ -123,10 +123,11 @@ void EngineDemoProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) 
 			juce::ARARenderer::AlwaysNonRealtime::no);
 	}
 
+	/** Prepare Real Time Synth */
+	this->renderer.prepare(sampleRate, samplesPerBlock);
+
 	/** Update Info */
 	this->updateContextInfo();
-
-	/** TODO Prepare Normal Synth */
 }
 
 void EngineDemoProcessor::releaseResources() {
@@ -138,6 +139,9 @@ void EngineDemoProcessor::releaseResources() {
 	else if (auto editorRenderer = this->getEditorRenderer<ARAEditorRenderer>()) {
 		editorRenderer->releaseResources();
 	}
+
+	/** Release Real Time Synth */
+	this->renderer.release();
 
 	/** Update Info */
 	this->updateContextInfo();
@@ -155,7 +159,7 @@ bool EngineDemoProcessor::isBusesLayoutSupported(
 }
 
 void EngineDemoProcessor::processBlock(
-	juce::AudioBuffer<float>& buffer, juce::MidiBuffer& /*midiMessages*/) {
+	juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) {
 	/** ARA Playback Renderer */
 	if (auto playbackRenderer = this->getPlaybackRenderer<ARAPlaybackRenderer>()) {
 		if (playbackRenderer->processBlock(buffer, Realtime::yes,
@@ -171,7 +175,8 @@ void EngineDemoProcessor::processBlock(
 		}
 	}
 
-	/** TODO Normal Synth */
+	/** Real Time Synth */
+	this->renderer.processBlock(buffer, midiMessages);
 }
 
 bool EngineDemoProcessor::hasEditor() const {
