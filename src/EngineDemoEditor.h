@@ -19,8 +19,11 @@ public:
 private:
 	EditorStatusModel& model;
 	std::unique_ptr<juce::TextEditor> infoEditor = nullptr;
+	std::unique_ptr<juce::TextEditor> dataEditor = nullptr;
 
 	void changeListenerCallback(juce::ChangeBroadcaster* source) override;
+
+	void onDataTextChanged();
 
 	const juce::Rectangle<int> getContentArea() const;
 

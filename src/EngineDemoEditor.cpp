@@ -17,6 +17,15 @@ EngineDemoEditor::EngineDemoEditor(
 			juce::TextEditor::ColourIds::textColourId));
 	this->addAndMakeVisible(this->infoEditor.get());
 
+	/** Data Editor */
+	this->dataEditor = std::make_unique<juce::TextEditor>();
+	this->dataEditor->setMultiLine(true);
+	this->dataEditor->setWantsKeyboardFocus(true);
+	this->dataEditor->setTabKeyUsedAsCharacter(true);
+	this->dataEditor->setReturnKeyStartsNewLine(true);
+	this->dataEditor->onTextChange = [this] { this->onDataTextChanged(); };
+	this->addAndMakeVisible(this->dataEditor.get());
+
 	/** Listener */
 	model.addChangeListener(this);
 	model.sendChangeMessage();
@@ -32,13 +41,18 @@ void EngineDemoEditor::resized() {
 	auto area = this->getContentArea();
 	bool contentVertical = area.getHeight() >= area.getWidth();
 
+	/** Data Size */
+	juce::Rectangle<int> statusArea = contentVertical
+		? area.withTrimmedBottom(area.getHeight() / 2)
+		: area.withTrimmedRight(area.getWidth() / 2);
+	juce::Rectangle<int> dataArea = statusArea.withTrimmedTop(statusArea.getHeight() / 2);
+	this->dataEditor->setBounds(dataArea);
+
 	/** Info Size */
 	juce::Rectangle<int> infoArea = contentVertical
 		? area.withTrimmedTop(area.getHeight() / 2)
 		: area.withTrimmedLeft(area.getWidth() / 2);
-	if (this->infoEditor) {
-		this->infoEditor->setBounds(infoArea);
-	}
+	this->infoEditor->setBounds(infoArea);
 }
 
 void EngineDemoEditor::paint(juce::Graphics& g) {
@@ -108,11 +122,17 @@ void EngineDemoEditor::paint(juce::Graphics& g) {
 void EngineDemoEditor::changeListenerCallback(juce::ChangeBroadcaster* /*source*/) {
 	/** Set Text */
 	this->infoEditor->setReadOnly(false);
-	this->infoEditor->setText(this->model.getContextInfo());
+	this->infoEditor->setText(this->model.getContextInfo(), false);
 	this->infoEditor->setReadOnly(true);
+
+	this->dataEditor->setText(this->model.getData(), false);
 
 	/** Repaint */
 	this->repaint();
+}
+
+void EngineDemoEditor::onDataTextChanged() {
+	this->model.setData(this->dataEditor->getText(), false);
 }
 
 const juce::Rectangle<int> EngineDemoEditor::getContentArea() const {

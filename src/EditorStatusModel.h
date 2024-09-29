@@ -42,11 +42,14 @@ public:
 	ARAStatus getARA() const;
 	RenderStatus getRendered() const;
 	juce::String getContextInfo() const;
+	
+	void setData(const juce::String& data, bool wantsSendChangeMessage = true);
+	juce::String getData() const;
 
 private:
 	ARAStatus ara = ARAStatus::Disconnected;
 	RenderStatus rendered = RenderStatus::Unrendered;
-	juce::String infoStr;
+	juce::String infoStr, dataStr;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EditorStatusModel)
 };

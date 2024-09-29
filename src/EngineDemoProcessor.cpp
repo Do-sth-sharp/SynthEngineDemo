@@ -4,6 +4,9 @@
 #include "ARARenderThread.h"
 #include "ARADocument.h"
 
+#define XML_DATA_NAME "data"
+#define XML_ROOT_NAME "SynthEngineDemo"
+
 class RenderStateListener final : public juce::ChangeListener {
 public:
 	RenderStateListener() = delete;
@@ -187,11 +190,34 @@ juce::AudioProcessorEditor* EngineDemoProcessor::createEditor() {
 	return new EngineDemoEditor(*this, this->statusModel);
 }
 
-void EngineDemoProcessor::getStateInformation(juce::MemoryBlock& /*destData*/) {
+/**
+ * A simple XML Document like this:
+ * <SynthEngineDemo>
+ *	<data>Some Data.</data>
+ * </SynthEngineDemo>
+ */
+
+void EngineDemoProcessor::getStateInformation(juce::MemoryBlock& destData) {
+	juce::XmlElement root{ XML_ROOT_NAME };
+	
+	auto dataElement = std::make_unique<juce::XmlElement>(XML_DATA_NAME);
+	dataElement->addTextElement(this->statusModel.getData());
+	root.addChildElement(dataElement.release());
+
+	auto dataStr = root.toString(juce::XmlElement::TextFormat{}.singleLine());
+	destData.append(dataStr.getCharPointer(), dataStr.length());
 }
 
 void EngineDemoProcessor::setStateInformation(
-	const void* /*data*/, int /*sizeInBytes*/) {
+	const void* data, int sizeInBytes) {
+	juce::XmlDocument document{ juce::String::createStringFromData(data, sizeInBytes) };
+	if (auto ptrElement = document.getDocumentElement()) {
+		if (ptrElement->getTagName() == XML_ROOT_NAME) {
+			if (auto dataElement = ptrElement->getChildByName(XML_DATA_NAME)) {
+				this->statusModel.setData(dataElement->getAllSubText());
+			}
+		}
+	}
 }
 
 void EngineDemoProcessor::numChannelsChanged() {

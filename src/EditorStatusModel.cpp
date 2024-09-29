@@ -56,3 +56,14 @@ EditorStatusModel::RenderStatus EditorStatusModel::getRendered() const {
 juce::String EditorStatusModel::getContextInfo() const {
 	return this->infoStr;
 }
+
+void EditorStatusModel::setData(const juce::String& data, bool wantsSendChangeMessage) {
+	this->dataStr = data;
+	if (wantsSendChangeMessage) {
+		this->sendChangeMessage();
+	}
+}
+
+juce::String EditorStatusModel::getData() const {
+	return this->dataStr;
+}
