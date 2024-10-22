@@ -59,10 +59,12 @@ set_target_properties (SynthEngineDemo PROPERTIES
 if (NOT MSVC)
     target_compile_options (SynthEngineDemo PRIVATE
 			-pthread
-			-fPIC
 			-fvisibility=hidden
 			-fvisibility-inlines-hidden
     )
+	if (NOT (("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang") AND WIN32))
+		target_compile_options (${TARGET} PRIVATE -fPIC)
+	endif ()
 	target_link_options (SynthEngineDemo PRIVATE
 			-shared
 			-fvisibility=hidden
@@ -72,7 +74,6 @@ if (NOT MSVC)
     if (WIN32)
         target_link_libraries (SynthEngineDemo PRIVATE
             -m64
-            -s
 			-lcomctl32
 			-lwinmm
 			-lwsock32
@@ -86,7 +87,11 @@ if (NOT MSVC)
 			-lopengl32
 			-ldxgi
         )
-    elseif (UNIX AND NOT APPLE)
+		if (NOT ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
+			target_link_libraries (${TARGET} PRIVATE -s)
+		endif ()
+
+	elseif (UNIX AND NOT APPLE)
         target_link_libraries (SynthEngineDemo PRIVATE
             ${RT}
             ${DL}
