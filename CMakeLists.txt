@@ -63,7 +63,7 @@ if (NOT MSVC)
 			-fvisibility-inlines-hidden
     )
 	if (NOT (("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang") AND WIN32))
-		target_compile_options (${TARGET} PRIVATE -fPIC)
+		target_compile_options (SynthEngineDemo PRIVATE -fPIC)
 	endif ()
 	target_link_options (SynthEngineDemo PRIVATE
 			-shared
