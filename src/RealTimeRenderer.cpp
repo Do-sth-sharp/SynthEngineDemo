@@ -40,7 +40,7 @@ public:
 	}
 
 	void readMaxLevels(
-		int64_t /*startSample*/, int64_t /*numSamples*/,
+		juce::int64 /*startSample*/, juce::int64 /*numSamples*/,
 		juce::Range<float>* results, int /*numChannelsToRead*/) override {
 		if (results) {
 			results->setStart(-1.0f);
@@ -48,7 +48,7 @@ public:
 		}
 	};
 	void readMaxLevels(
-		int64_t startSample, int64_t numSamples,
+		juce::int64 startSample, juce::int64 numSamples,
 		float& lowestLeft, float& highestLeft,
 		float& lowestRight, float& highestRight) override {
 		lowestLeft = lowestRight = -1.0f;
@@ -61,7 +61,7 @@ public:
 
 	bool readSamples(
 		int* const* destChannels, int numDestChannels,
-		int startOffsetInDestBuffer, int64_t startSampleInFile, int numSamples) override {
+		int startOffsetInDestBuffer, juce::int64 startSampleInFile, int numSamples) override {
 		for (int i = 0; i < numDestChannels; i++) {
 			/** Get Buffer Pointer */
 			int bufferChannel = i % this->buffer.getNumChannels();
