@@ -52,128 +52,13 @@ add_subdirectory (juce-vst3-dev-kit)
 # =============================================
 file (GLOB_RECURSE TARGET_SRC "src/*.cpp" "src/*.h")
 add_library (SynthEngineDemo SHARED ${TARGET_SRC})
-target_link_libraries (SynthEngineDemo PRIVATE juce)
+if (NOT WIN32)
+	target_link_libraries (SynthEngineDemo PRIVATE -Wl,--whole-archive juce -Wl,--no-whole-archive)
+else ()
+	target_link_libraries (SynthEngineDemo PRIVATE juce)
+endif ()
 set_target_properties (SynthEngineDemo PROPERTIES
   PREFIX "" OUTPUT_NAME "SynthEngineDemo" SUFFIX ".vst3")
-
-if (NOT MSVC)
-    target_compile_options (SynthEngineDemo PRIVATE
-			-pthread
-			-fvisibility=hidden
-			-fvisibility-inlines-hidden
-    )
-	if (NOT (("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang") AND WIN32))
-		target_compile_options (SynthEngineDemo PRIVATE -fPIC)
-	endif ()
-	target_link_options (SynthEngineDemo PRIVATE
-			-shared
-			-fvisibility=hidden
-			-fvisibility-inlines-hidden
-	)
-
-    if (WIN32)
-        target_link_libraries (SynthEngineDemo PRIVATE
-            -m64
-			-lcomctl32
-			-lwinmm
-			-lwsock32
-			-lwininet
-			-lversion
-			-lws2_32
-			-loleaut32
-			-limm32
-			-lshlwapi
-			-lrpcrt4
-			-lopengl32
-			-ldxgi
-        )
-		if (NOT ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
-			target_link_libraries (${TARGET} PRIVATE -s)
-		endif ()
-
-	elseif (UNIX AND NOT APPLE)
-        target_link_libraries (SynthEngineDemo PRIVATE
-            ${RT}
-            ${DL}
-            ${PTHREAD}
-            ${GL}
-            ${ALSA_LIBRARIES}
-            ${FREETYPE2_LIBRARIES}
-            ${LIBCURL_LIBRARIES}
-        )
-    elseif (APPLE)
-        target_link_libraries (SynthEngineDemo PRIVATE
-            "-framework Accelerate"
-            "-framework AudioToolbox"
-            "-framework AVFoundation"
-            "-framework AVKit"
-            "-framework Carbon"
-            "-framework Cocoa"
-            "-framework CoreAudio"
-            "-framework CoreAudioKit"
-            "-framework CoreMedia"
-            "-framework CoreMIDI"
-            "-framework DiscRecording"
-            "-framework Foundation"
-            "-framework IOKit"
-            "-framework OpenGL"
-            "-framework QuartzCore"
-            "-framework WebKit"
-        )
-    endif ()
-else (NOT MSVC)
-    if (CMAKE_BUILD_TYPE STREQUAL Debug)
-        target_compile_options (SynthEngineDemo PRIVATE
-            /permissive-#符合模式:是
-	        /GS#安全检查:启用安全检查
-	        /Zc:wchar_t#将WChar_t视为内置类型:是
-	        /Gm-#启用最小重新生成:否
-	        /sdl#SDL检查:是
-	        /fp:precise#浮点模型:精度
-	        /Zc:forScope#强制For循环范围中的合规性:是
-	        /Gd#调用约定:__cdecl
-	        /nologo#取消显示启动版权标志:是
-	        /bigobj#较大生成对象:是
-        )
-        target_link_options (SynthEngineDemo PRIVATE
-	        /MANIFEST#生成清单:是
-	        /NXCOMPAT#数据执行保护(DEP):是
-	        /DYNAMICBASE#随机基址:是
-	        /LARGEADDRESSAWARE#启用大地址:是
-	        /SUBSYSTEM:WINDOWS#子系统:窗口
-	        /MANIFESTUAC:NO#启用用户账户控制:否
-	        /NOLOGO#取消显示启动版权标志:是
-        )
-    else (CMAKE_BUILD_TYPE STREQUAL Debug)
-        target_compile_options (SynthEngineDemo PRIVATE
-            /permissive-#符合模式:是
-	        /GS#安全检查:启用安全检查
-	        /GL#全程序优化:是
-	        /Gy#启用函数级链接:是
-	        /Zc:wchar_t#将WChar_t视为内置类型:是
-	        /Gm-#启用最小重新生成:否
-	        /sdl#SDL检查:是
-	        /fp:precise#浮点模型:精度
-	        /Zc:forScope#强制For循环范围中的合规性:是
-	        /Gd#调用约定:__cdecl
-	        /Oi#启用内部函数:是
-	        /nologo#取消显示启动版权标志:是
-	        /bigobj#较大生成对象:是
-        )
-        target_link_options (SynthEngineDemo PRIVATE
-	        /MANIFEST#生成清单:是
-	        /LTCG:incremental#链接时间代码生成:使用快速链接时间代码生成
-	        /NXCOMPAT#数据执行保护(DEP):是
-	        /DYNAMICBASE#随机基址:是
-	        /LARGEADDRESSAWARE#启用大地址:是
-	        /OPT:REF#引用:是
-	        /SUBSYSTEM:WINDOWS#子系统:窗口
-	        /MANIFESTUAC:NO#启用用户账户控制:否
-	        /OPT:ICF#启用COMDAT折叠:是
-	        /NOLOGO#取消显示启动版权标志:是
-        )
-    endif (CMAKE_BUILD_TYPE STREQUAL Debug)
-endif (NOT MSVC)
 
 # =============================================
 # Install
